@@ -1,0 +1,30 @@
+version: '3.3'
+
+services:
+  api:
+    image: node:${NODE_VERSION}
+    ports:
+      - '${APP_PORT}:3000'
+    command: 'npm start --prefix /app'
+    volumes:
+      - './app:/app'
+      - './.env:/app/.env'
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:${MONGO_VERSION}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
+  mongo-express:
+    image: mongo-express:${MONGO_EXPRESS_VERSION}
+    ports:
+      - '${MONGO_EXPRESS_PORT}:8081'
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/
+    depends_on:
+      - mongo
