@@ -16,7 +16,7 @@ Swagger is accessible on ``127.0.0.1:3000/api-docs``
 
 Mongo Express is accessible on ``127.0.0.1:3001``
 
-Mongo Express creditentials:
+Mongo Express credentials:
 <br>
 User: ``root``
 <br>
