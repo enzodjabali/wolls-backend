@@ -48,7 +48,7 @@ const registerUser = async (req, res) => {
 };
 
 
-const loginUser = async (req, res) => {
+const authenticateUser = async (req, res) => {
     try {
         let { pseudonym, password } = req.body;
 
@@ -75,7 +75,7 @@ const loginUser = async (req, res) => {
 };
 
 
-const getAllUsers = async (req, res) => {
+const getUsersList = async (req, res) => {
     User.find({}, '_id pseudonym')
         .then(result => {
             res.status(200).json(result);
@@ -87,7 +87,7 @@ const getAllUsers = async (req, res) => {
 };
 
 
-const whoami = async (req, res) => {
+const getCurrentUser = async (req, res) => {
     try {
         User.findOne({_id: req.userId}).then(function(currentUser) {
             res.status(200).json({ currentUser });
@@ -97,7 +97,7 @@ const whoami = async (req, res) => {
     }
 };
 
-const updateMyself = async (req, res) => {
+const updateCurrentUser = async (req, res) => {
     req.body.password = req.body.password == null ? req.body.password : await bcrypt.hash(req.body.password, 10);
 
     try {
@@ -120,7 +120,7 @@ const updateMyself = async (req, res) => {
     }
 };
 
-const deleteUser = (req, res) => {
+const deleteCurrentUser = (req, res) => {
     User.findByIdAndDelete({_id: req.userId})
         .then(result => {
             res.send('Your account has been successfully deleted');
@@ -130,4 +130,4 @@ const deleteUser = (req, res) => {
         });
 };
 
-module.exports = { registerUser, loginUser, getAllUsers, whoami, updateMyself, deleteUser };
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, deleteCurrentUser };
