@@ -1,10 +1,10 @@
 const Group = require('../models/Group');
 const User = require('../models/User');
-const { createGroupSchema, updateTestSchema } = require('../middlewares/validationSchema');
-const Test = require("../models/Test");
-
+const { createGroupSchema, updateGroupSchema} = require('../middlewares/validationSchema');
 
 const createGroup = async (req, res) => {
+    await createGroupSchema.validateAsync(req.body);
+
     const { name, description } = req.body;
 
     try {
