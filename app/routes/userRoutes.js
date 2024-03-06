@@ -1,15 +1,14 @@
 const express = require('express');
-const { registerUser, loginUser, whoami, getAllUsers, deleteUser, updateMyself, updateUser } = require ('../controllers/userController');
+const { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, deleteCurrentUser } = require ('../controllers/userController');
 const router = express.Router();
 
 const authenticateJWT = require('../middlewares/auth');
 
-router.get('/all', authenticateJWT, getAllUsers);
 router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/me', authenticateJWT, whoami);
-router.put('/', authenticateJWT, updateMyself);
-router.put('/:id', authenticateJWT, updateUser);
-router.delete('/', authenticateJWT, deleteUser);
+router.post('/login', authenticateUser);
+router.get('/', authenticateJWT, getUsersList);
+router.get('/me', authenticateJWT, getCurrentUser);
+router.put('/', authenticateJWT, updateCurrentUser);
+router.delete('/', authenticateJWT, deleteCurrentUser);
 
 module.exports = router;
