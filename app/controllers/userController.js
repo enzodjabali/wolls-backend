@@ -76,15 +76,16 @@ const loginUser = async (req, res) => {
 
 
 const getAllUsers = async (req, res) => {
-    User.find()
-    .then(result => {
-        res.status(200).json(result);
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({ error: 'Internal Server Error' })
-    });
+    User.find({}, '_id pseudonym')
+        .then(result => {
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: 'Internal Server Error' })
+        });
 };
+
 
 const whoami = async (req, res) => {
     try {
