@@ -12,12 +12,14 @@ const createUserSchema = Joi.object({
 });
 
 const updateUserSchema = Joi.object({
-    firstname: Joi.string().min(2).max(30).required(),
-    lastname: Joi.string().min(2).max(30).required(),
-    pseudonym: Joi.string().min(2).max(30).required(),
+    firstname: Joi.string().min(2).max(30),
+    lastname: Joi.string().min(2).max(30),
+    pseudonym: Joi.string().min(2).max(30),
     email: Joi.string().email().lowercase(),
     password: Joi.string().min(2),
+    confirmPassword: Joi.string().min(2),
 });
+
 
 // Test
 

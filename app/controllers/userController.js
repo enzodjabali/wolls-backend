@@ -86,39 +86,44 @@ const getUsersList = async (req, res) => {
         });
 };
 
-
 const getCurrentUser = async (req, res) => {
     try {
-        User.findOne({_id: req.userId}).then(function(currentUser) {
-            res.status(200).json({ currentUser });
-        });
+        const currentUser = await User.findOne({ _id: req.userId }, { _id: 1, firstname: 1, lastname: 1, pseudonym: 1, email: 1 });
+        res.status(200).json(currentUser);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
 const updateCurrentUser = async (req, res) => {
-    req.body.password = req.body.password == null ? req.body.password : await bcrypt.hash(req.body.password, 10);
-
     try {
+        // If password is provided, validate and hash it
+        if (req.body.password !== undefined && req.body.password !== null) {
+            // Check if confirmPassword matches the new password
+            if (req.body.password.trim() !== req.body.confirmPassword.trim()) {
+                return res.status(400).json({ error: 'Passwords do not match' });
+            }
+            // Hash the new password
+            req.body.password = await bcrypt.hash(req.body.password, 10);
+        }
+
+        // Validate the request body
         await updateUserSchema.validateAsync(req.body);
 
-        User.findByIdAndUpdate({_id: req.userId}, req.body)
-            .then(result => {
-                if (result) {
-                    res.status(200).send('You have successfully updated your account'); // 200 OK
-                } else {
-                    res.status(404).json({ error: 'User not found' }); // 404 Not Found
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                res.status(500).json({ error: 'Internal Server Error' }); // 500 Internal Server Error
-            });
+        // Update the user document
+        const result = await User.findByIdAndUpdate(req.userId, req.body);
+
+        // Check if user was found and updated
+        if (result) {
+            res.status(200).send('You have successfully updated your account');
+        } else {
+            res.status(404).json({ error: 'User not found' });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 const deleteCurrentUser = (req, res) => {
     User.findByIdAndDelete({_id: req.userId})
