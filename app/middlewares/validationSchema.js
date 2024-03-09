@@ -1,6 +1,8 @@
 const Joi = require('@hapi/joi');
 
-// User
+//////////////////////////////////////////////////////////////////////
+//                             User                                 //
+//////////////////////////////////////////////////////////////////////
 
 const createUserSchema = Joi.object({
     firstname: Joi.string().min(2).max(30).required(),
@@ -20,8 +22,23 @@ const updateUserSchema = Joi.object({
     confirmPassword: Joi.string().min(2),
 });
 
+//////////////////////////////////////////////////////////////////////
+//                             Group                                //
+//////////////////////////////////////////////////////////////////////
 
-// Test
+const createGroupSchema = Joi.object({
+    name: Joi.string().min(2).max(30).required(),
+    description: Joi.string().min(2).max(100)
+});
+
+const updateGroupSchema = Joi.object({
+    name: Joi.string().min(2).max(30),
+    description: Joi.string().min(2).max(100)
+});
+
+//////////////////////////////////////////////////////////////////////
+//                             Test                                 //
+//////////////////////////////////////////////////////////////////////
 
 const createTestSchema = Joi.object({
     name: Joi.string().min(2).max(30).required(),
@@ -31,9 +48,18 @@ const updateTestSchema = Joi.object({
     name: Joi.string().min(2).max(30),
 });
 
+//////////////////////////////////////////////////////////////////////
+//                           Exports                                //
+//////////////////////////////////////////////////////////////////////
+
 module.exports = {
+    // User
     createUserSchema,
     updateUserSchema,
+    // Group
+    createGroupSchema,
+    updateGroupSchema,
+    // Test
     createTestSchema,
-    updateTestSchema
+    updateTestSchema,
 };
