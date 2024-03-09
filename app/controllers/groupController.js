@@ -20,7 +20,6 @@ const createGroup = async (req, res) => {
         const newGroup = new Group({
             name,
             description,
-            administrator: currentUser._id // Assign the current user as the administrator
         });
 
         // Save the new group to the database
@@ -45,15 +44,25 @@ const createGroup = async (req, res) => {
 
 const getAllGroups = async (req, res) => {
     try {
-        // Find all groups
-        const allGroups = await Group.find();
+        // Find all group memberships of the current user that have been accepted
+        const userGroupMemberships = await GroupMembership.find({
+            user_id: req.userId,
+            has_accepted_invitation: true
+        });
 
-        res.status(200).json(allGroups); // Respond with all groups
+        // Extract the IDs of the groups from the user's group memberships
+        const groupIds = userGroupMemberships.map(membership => membership.group_id);
+
+        // Find all groups with IDs that match the user's group memberships
+        const allGroups = await Group.find({ _id: { $in: groupIds } });
+
+        res.status(200).json(allGroups); // Respond with groups that the current user has accepted invitations for
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
 
 
 const getGroupById = async (req, res) => {

@@ -8,11 +8,6 @@ const groupSchema = new Schema({
     },
     description: {
         type: String
-    },
-    administrator: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
     }
 });
 
