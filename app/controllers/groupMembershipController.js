@@ -14,7 +14,16 @@ const createGroupMembership = async (req, res) => {
             return res.status(404).json({ message: "Group not found" });
         }
 
-        // TODO: Check if the current user is the administrator of the group
+        // Check if the current user is the administrator of the group
+        const groupMembership = await GroupMembership.findOne({
+            user_id: req.userId,
+            group_id,
+            is_administrator: true
+        });
+
+        if (!groupMembership) {
+            return res.status(403).json({ message: "You are not authorized to add members to this group" });
+        }
 
         // Create a new group membership instance
         const newMembership = new GroupMembership({
