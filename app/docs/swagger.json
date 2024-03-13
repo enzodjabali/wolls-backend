@@ -17,8 +17,12 @@
       "description": "Actions on users"
     },
     {
-      "name": "Tests",
-      "description": "Actions on tests"
+      "name": "Groups",
+      "description": "Actions on groups"
+    },
+    {
+      "name": "Group Memberships",
+      "description": "Actions on group memberships"
     }
   ],
   "schemes": [
@@ -33,17 +37,48 @@
     "application/json"
   ],
   "paths": {
-    "/v1/tests/all/{sortByName?}": {
-      "get": {
-        "tags": ["Tests"],
-        "description": "",
+    "/v1/groups": {
+      "post": {
+        "tags": ["Groups"],
+        "description": "Create a new group",
         "parameters": [
           {
-            "name": "sortByName?",
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/GroupRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/groups/{id}": {
+      "get": {
+        "tags": ["Groups"],
+        "description": "Get group by ID",
+        "parameters": [
+          {
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string",
-            "description": "Options: true, false. Default: false."
+            "description": "ID of the group"
           },
           {
             "name": "Authorization",
@@ -58,33 +93,28 @@
           "401": {
             "description": "Unauthorized"
           },
-          "500": {
-            "description": "Internal Server Error"
+          "404": {
+            "description": "Not Found"
           }
         }
       }
     },
-    "/v1/tests/": {
+    "/v1/groups/memberships": {
       "post": {
-        "tags": ["Tests"],
-        "description": "",
+        "tags": ["Group Memberships"],
+        "description": "Create a new group membership",
         "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          },
           {
             "name": "body",
             "in": "body",
             "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "example": "St Pancras"
-                }
-              }
+              "$ref": "#/definitions/GroupMembershipRequestBody"
             }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
@@ -97,139 +127,8 @@
           "403": {
             "description": "Forbidden"
           },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/v1/tests/{id}": {
-      "get": {
-        "tags": ["Tests"],
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ID of the test"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
           "404": {
             "description": "Not Found"
-          }
-        }
-      },
-      "put": {
-        "tags": ["Tests"],
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ID of the test"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "example": "St Pancras"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Tests"],
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ID of the test"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      }
-    },
-    "/v1/users/all": {
-      "get": {
-        "tags": ["Users"],
-        "description": "",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           },
           "500": {
             "description": "Internal Server Error"
@@ -240,31 +139,22 @@
     "/v1/users/register": {
       "post": {
         "tags": ["Users"],
-        "description": "",
+        "description": "Register a new user",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "schema": {
-              "type": "object",
-              "properties": {
-                "username": {
-                  "example": "jean"
-                },
-                "email": {
-                  "example": "jean.dupond@supinfo.com"
-                },
-                "password": {
-                  "type": "string",
-                  "example": "1234"
-                }
-              }
+              "$ref": "#/definitions/UserRegisterRequestBody"
             }
           }
         ],
         "responses": {
           "201": {
             "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
           },
           "500": {
             "description": "Internal Server Error"
@@ -275,22 +165,13 @@
     "/v1/users/login": {
       "post": {
         "tags": ["Users"],
-        "description": "",
+        "description": "Authenticate user",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "schema": {
-              "type": "object",
-              "properties": {
-                "username": {
-                  "example": "jean"
-                },
-                "password": {
-                  "type": "string",
-                  "example": "1234"
-                }
-              }
+              "$ref": "#/definitions/UserLoginRequestBody"
             }
           }
         ],
@@ -310,7 +191,7 @@
     "/v1/users/me": {
       "get": {
         "tags": ["Users"],
-        "description": "",
+        "description": "Get current user",
         "parameters": [
           {
             "name": "Authorization",
@@ -334,7 +215,7 @@
     "/v1/users/": {
       "put": {
         "tags": ["Users"],
-        "description": "",
+        "description": "Update current user",
         "parameters": [
           {
             "name": "Authorization",
@@ -345,25 +226,16 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "type": "object",
-              "properties": {
-                "username": {
-                  "example": "jean"
-                },
-                "email": {
-                  "example": "jean.dupond@supinfo.com"
-                },
-                "password": {
-                  "type": "string",
-                  "example": "1234"
-                }
-              }
+              "$ref": "#/definitions/UserUpdateRequestBody"
             }
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
           },
           "401": {
             "description": "Unauthorized"
@@ -378,7 +250,7 @@
       },
       "delete": {
         "tags": ["Users"],
-        "description": "",
+        "description": "Delete current user",
         "parameters": [
           {
             "name": "Authorization",
@@ -395,63 +267,103 @@
           }
         }
       }
+    }
+  },
+  "definitions": {
+    "GroupRequestBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "My Group"
+        },
+        "description": {
+          "type": "string",
+          "example": "A description of my group"
+        }
+      }
     },
-    "/v1/users/{id}": {
-      "put": {
-        "tags": ["Users"],
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ID of the user to edit"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "username": {
-                  "example": "jean"
-                },
-                "email": {
-                  "example": "jean.dupond@supinfo.com"
-                },
-                "password": {
-                  "type": "string",
-                  "example": "1234"
-                },
-                "role": {
-                  "example": "USER"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
+    "GroupMembershipRequestBody": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "example": "609e8e51894f0b0008317211"
+        },
+        "group_id": {
+          "type": "string",
+          "example": "609e8e51894f0b0008317222"
+        }
+      }
+    },
+    "UserRegisterRequestBody": {
+      "type": "object",
+      "properties": {
+        "firstname": {
+          "type": "string",
+          "example": "John"
+        },
+        "lastname": {
+          "type": "string",
+          "example": "Doe"
+        },
+        "pseudonym": {
+          "type": "string",
+          "example": "john_doe"
+        },
+        "email": {
+          "type": "string",
+          "example": "john.doe@example.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "newpassword123"
+        },
+        "confirmPassword": {
+          "type": "string",
+          "example": "newpassword123"
+        }
+      }
+    },
+    "UserLoginRequestBody": {
+      "type": "object",
+      "properties": {
+        "pseudonym": {
+          "type": "string",
+          "example": "john_doe"
+        },
+        "password": {
+          "type": "string",
+          "example": "newpassword123"
+        }
+      }
+    },
+    "UserUpdateRequestBody": {
+      "type": "object",
+      "properties": {
+        "firstname": {
+          "type": "string",
+          "example": "John"
+        },
+        "lastname": {
+          "type": "string",
+          "example": "Doe"
+        },
+        "pseudonym": {
+          "type": "string",
+          "example": "john_doe"
+        },
+        "email": {
+          "type": "string",
+          "example": "john.doe@example.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "newpassword123"
+        },
+        "confirmPassword": {
+          "type": "string",
+          "example": "newpassword123"
         }
       }
     }
