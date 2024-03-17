@@ -24,6 +24,15 @@ APP.listen(PORT, () => {
     console.log(`App listening on port ${PORT}`);
 });
 
+// this disables CORS
+APP.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    next();
+});
+
 APP.use('/v1/users', userRoutes);
 APP.use('/v1/groups', groupRoutes);
 APP.use('/v1/groups/memberships', groupMembershipsRoutes);
