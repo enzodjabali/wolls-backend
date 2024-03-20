@@ -37,6 +37,23 @@ const updateGroupSchema = Joi.object({
 });
 
 //////////////////////////////////////////////////////////////////////
+//                            Expense                               //
+//////////////////////////////////////////////////////////////////////
+
+const createExpenseSchema = Joi.object({
+    title: Joi.string().min(2).max(100).required(),
+    amount: Joi.number().min(0).required(),
+    group_id: Joi.string().required(),
+    category: Joi.string().min(2).max(30)
+});
+
+const updateExpenseSchema = Joi.object({
+    title: Joi.string().min(2).max(100),
+    amount: Joi.number().min(0),
+    category: Joi.string().min(2).max(30)
+});
+
+//////////////////////////////////////////////////////////////////////
 //                             Test                                 //
 //////////////////////////////////////////////////////////////////////
 
@@ -59,6 +76,9 @@ module.exports = {
     // Group
     createGroupSchema,
     updateGroupSchema,
+    // Expense
+    createExpenseSchema,
+    updateExpenseSchema,
     // Test
     createTestSchema,
     updateTestSchema,

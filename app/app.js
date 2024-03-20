@@ -11,6 +11,7 @@ const DB_URI = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASS
 const userRoutes = require('./routes/userRoutes');
 const groupRoutes = require('./routes/groupRoutes');
 const groupMembershipsRoutes = require('./routes/groupMembershipsRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 const testRoutes = require('./routes/testRoutes');
 
 
@@ -36,6 +37,7 @@ APP.use((req, res, next) => {
 APP.use('/v1/users', userRoutes);
 APP.use('/v1/groups', groupRoutes);
 APP.use('/v1/groups/memberships', groupMembershipsRoutes);
+APP.use('/v1/expenses', expenseRoutes);
 APP.use('/v1/tests', testRoutes);
 
 const swaggerUi = require('swagger-ui-express');
