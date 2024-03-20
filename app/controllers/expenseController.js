@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const GroupMembership = require('../models/GroupMembership');
 const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/validationSchema');
 
 // Function to get all expenses for a specific group
@@ -6,6 +7,13 @@ const getExpenses = async (req, res) => {
     const groupId = req.params.groupId; // Extract group ID from request parameters
 
     try {
+        // Check if the current user has accepted the group invitation
+        const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
+
+        if (!membership || !membership.has_accepted_invitation) {
+            return res.status(403).json({ message: "You do not have permission to view expenses for this group" });
+        }
+
         // Find all expenses associated with the specified group
         const expenses = await Expense.find({ group_id: groupId });
 
@@ -25,6 +33,13 @@ const createExpense = async (req, res) => {
         const { title, amount, category, group_id } = req.body;
         const creator_id = req.userId;
         const date = Date.now(); // Set current date
+
+        // Check if the current user has accepted the group invitation
+        const membership = await GroupMembership.findOne({ user_id: creator_id, group_id: group_id });
+
+        if (!membership || !membership.has_accepted_invitation) {
+            return res.status(403).json({ message: "You do not have permission to create expenses for this group" });
+        }
 
         // Create new expense instance
         const newExpense = new Expense({
@@ -66,6 +81,11 @@ const updateExpense = async (req, res) => {
             return res.status(404).json({ message: "Expense not found" });
         }
 
+        // Check if the current user is the creator of the expense
+        if (expense.creator_id != req.userId) {
+            return res.status(403).json({ message: "You do not have permission to edit this expense" });
+        }
+
         // Update expense data
         const { title, amount, category } = req.body;
         expense.title = title;
@@ -92,7 +112,19 @@ const deleteExpense = async (req, res) => {
     const expenseId = req.params.id; // Extract expense ID from request parameters
 
     try {
-        // Find expense by ID and delete it
+        // Find expense by ID
+        let expense = await Expense.findById(expenseId);
+
+        if (!expense) {
+            return res.status(404).json({ message: "Expense not found" });
+        }
+
+        // Check if the current user is the creator of the expense
+        if (expense.creator_id != req.userId) {
+            return res.status(403).json({ message: "You do not have permission to delete this expense" });
+        }
+
+        // Delete expense
         await Expense.findByIdAndDelete(expenseId);
 
         // Respond with success message
