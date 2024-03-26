@@ -13,6 +13,9 @@ const createGroupMembership = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
+        console.log(user);
+        console.log(user._id);
+
         // Vérifier si l'utilisateur est déjà membre du groupe
         const existingMembership = await GroupMembership.findOne({ user_id: user._id, group_id });
 
