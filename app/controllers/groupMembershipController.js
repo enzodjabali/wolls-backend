@@ -40,7 +40,34 @@ const createGroupMembership = async (req, res) => {
     }
 };
 
+const getGroupMembers = async (req, res) => {
+    const groupId = req.params.id;
+
+    try {
+        // Find the group by its ID
+        const group = await Group.findById(groupId);
+
+        if (!group) {
+            return res.status(404).json({ message: "Group not found" });
+        }
+
+        // Find all group memberships for the current group
+        const groupMemberships = await GroupMembership.find({ group_id: groupId });
+
+        // Extract user IDs from group memberships
+        const userIds = groupMemberships.map(membership => membership.user_id);
+
+        // Find users with IDs that match group memberships
+        const groupMembers = await User.find({ _id: { $in: userIds } });
+
+        res.status(200).json(groupMembers);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
 module.exports = {
-    createGroupMembership
+    createGroupMembership,
+    getGroupMembers
 };
