@@ -58,14 +58,17 @@ const getGroupMembers = async (req, res) => {
         const userIds = groupMemberships.map(membership => membership.user_id);
 
         // Find users with IDs that match group memberships
-        const groupMembers = await User.find({ _id: { $in: userIds } });
+        const groupMembers = await Promise.all(userIds.map(async userId => {
+            const user = await User.findById(userId);
+            const groupMembership = groupMemberships.find(membership => membership.user_id.toString() === userId.toString());
+            return { ...user.toObject(), is_administrator: groupMembership.is_administrator };
+        }));
 
         res.status(200).json(groupMembers);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 module.exports = {
     createGroupMembership,
