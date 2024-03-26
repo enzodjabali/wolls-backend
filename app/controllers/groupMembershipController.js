@@ -7,6 +7,7 @@ const createGroupMembership = async (req, res) => {
 
     try {
         // Trouver l'utilisateur par son pseudonyme
+        console.log(user_pseudonym);
         const user = await User.findOne({ pseudonym: user_pseudonym });
 
         if (!user) {
