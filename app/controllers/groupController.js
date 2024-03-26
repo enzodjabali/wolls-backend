@@ -41,7 +41,6 @@ const createGroup = async (req, res) => {
     }
 };
 
-
 const getAllGroups = async (req, res) => {
     try {
         // Find all group memberships of the current user that have been accepted
@@ -63,8 +62,6 @@ const getAllGroups = async (req, res) => {
     }
 };
 
-
-
 const getGroupById = async (req, res) => {
     const groupId = req.params.id; // Extract the group ID from the request parameters
 
@@ -82,4 +79,20 @@ const getGroupById = async (req, res) => {
     }
 };
 
-module.exports = { createGroup, getAllGroups, getGroupById };
+const deleteGroupById = async (req, res) => {
+    const groupId = req.params.id;
+
+    try {
+        const deletedGroup = await Group.findByIdAndDelete(groupId);
+
+        if (!deletedGroup) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        res.status(200).json(deletedGroup);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { createGroup, getAllGroups, getGroupById, deleteGroupById };
