@@ -95,7 +95,7 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
-const updateCurrentUser = async (req, res) => {
+/*const updateCurrentUser = async (req, res) => {
     try {
         // If password is provided, validate and hash it
         if (req.body.password !== undefined && req.body.password !== null) {
@@ -122,7 +122,53 @@ const updateCurrentUser = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+};*/
+
+const updateCurrentUser = async (req, res) => {
+    try {
+        // Récupérer l'utilisateur actuel
+        const currentUser = await User.findById(req.userId);
+
+        // Vérifier si le mot de passe est fourni et s'il correspond à celui enregistré en base de données
+        if (req.body.password !== undefined && req.body.password !== null) {
+            const isPasswordValid = await bcrypt.compare(req.body.password, currentUser.password);
+            if (!isPasswordValid) {
+                return res.status(400).json({ error: 'Invalid password' });
+            }
+            // Supprimer le champ password pour éviter qu'il ne soit mis à jour
+            delete req.body.password;
+        }
+
+        // Supprimer le champ confirmPassword s'il est présent dans la requête
+        if (req.body.confirmPassword) {
+            delete req.body.confirmPassword;
+        }
+
+        // Vérifier si d'autres champs que firstname, lastname, pseudonym et email sont fournis et les supprimer
+        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email'];
+        Object.keys(req.body).forEach(key => {
+            if (!allowedFields.includes(key)) {
+                delete req.body[key];
+            }
+        });
+
+        // Valider le schéma de mise à jour
+        await updateUserSchema.validateAsync(req.body);
+
+        // Mettre à jour l'utilisateur
+        const result = await User.findByIdAndUpdate(req.userId, req.body);
+
+        // Vérifier si l'utilisateur a été trouvé et mis à jour
+        if (result) {
+            res.status(200).send('You have successfully updated your account');
+        } else {
+            res.status(404).json({ error: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
+
 
 
 const deleteCurrentUser = (req, res) => {
