@@ -79,6 +79,31 @@ const getGroupById = async (req, res) => {
     }
 };
 
+const updateGroupById = async (req, res) => {
+    const groupId = req.params.id;
+
+    try {
+        // Validate the request body
+        await updateGroupSchema.validateAsync(req.body);
+
+        // Find and update the group by its ID
+        const updatedGroup = await Group.findByIdAndUpdate(groupId, {
+            name: req.body.name,
+            description: req.body.description
+        }, { new: true }); // Set { new: true } to return the updated document
+
+        // Check if the group was found and updated
+        if (!updatedGroup) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        res.status(200).json(updatedGroup);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 const deleteGroupById = async (req, res) => {
     const groupId = req.params.id;
 
@@ -95,4 +120,4 @@ const deleteGroupById = async (req, res) => {
     }
 };
 
-module.exports = { createGroup, getAllGroups, getGroupById, deleteGroupById };
+module.exports = { createGroup, getAllGroups, getGroupById, updateGroupById, deleteGroupById };
