@@ -5,12 +5,38 @@ const Joi = require('@hapi/joi');
 //////////////////////////////////////////////////////////////////////
 
 const createUserSchema = Joi.object({
-    firstname: Joi.string().min(2).max(30).required(),
-    lastname: Joi.string().min(2).max(30).required(),
-    pseudonym: Joi.string().min(2).max(30).required(),
-    email: Joi.string().email().lowercase().required(),
-    password: Joi.string().min(2).required(),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({'any.only': 'Passwords do not match'}),
+    firstname: Joi.string().min(2).max(30).required().messages({
+        'string.empty': 'Le prénom est requis',
+        'string.min': 'Le prénom doit avoir au moins 2 caractères',
+        'string.max': 'Le prénom ne peut pas dépasser 2 caractères',
+        'any.required': 'Le prénom est requis',
+    }),
+    lastname: Joi.string().min(2).max(30).required().messages({
+        'string.empty': 'Le nom est requis',
+        'string.min': 'Le nom doit avoir au moins 2 caractères',
+        'string.max': 'Le nom ne peut pas dépasser 2 caractères',
+        'any.required': 'Le nom est requis',
+    }),
+    pseudonym: Joi.string().min(2).max(30).required().messages({
+        'string.empty': 'Le pseudo est requis',
+        'string.min': 'Le pseudo doit avoir au moins 2 caractères',
+        'string.max': 'Le pseudo ne peut pas dépasser 2 caractères',
+        'any.required': 'Le pseudo est requis',
+    }),
+    email: Joi.string().email().lowercase().required().messages({
+        'string.empty': 'L\'email est requis',
+        'string.email': 'L\'email doit être valide',
+        'any.required': 'L\'email est requis',
+    }),
+    password: Joi.string().min(2).required().messages({
+        'string.empty': 'Le mot de passe est requis',
+        'string.min': 'Le mot de passe doit avoir au moins 4 caractères',
+        'any.required': 'Le mot de passe est requis',
+    }),
+    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
+        'any.only': 'Les mots de passe ne correspondent pas',
+        'any.required': 'La confirmation du mot de passe est requise',
+    }),
 });
 
 const updateUserSchema = Joi.object({
