@@ -47,7 +47,6 @@ const registerUser = async (req, res) => {
     }
 };
 
-
 const authenticateUser = async (req, res) => {
     try {
         let { pseudonym, password } = req.body;
@@ -74,7 +73,6 @@ const authenticateUser = async (req, res) => {
     }
 };
 
-
 const getUsersList = async (req, res) => {
     User.find({}, '_id pseudonym')
         .then(result => {
@@ -94,35 +92,6 @@ const getCurrentUser = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-/*const updateCurrentUser = async (req, res) => {
-    try {
-        // If password is provided, validate and hash it
-        if (req.body.password !== undefined && req.body.password !== null) {
-            // Check if confirmPassword matches the new password
-            if (req.body.password.trim() !== req.body.confirmPassword.trim()) {
-                return res.status(400).json({ error: 'Passwords do not match' });
-            }
-            // Hash the new password
-            req.body.password = await bcrypt.hash(req.body.password, 10);
-        }
-
-        // Validate the request body
-        await updateUserSchema.validateAsync(req.body);
-
-        // Update the user document
-        const result = await User.findByIdAndUpdate(req.userId, req.body);
-
-        // Check if user was found and updated
-        if (result) {
-            res.status(200).send('You have successfully updated your account');
-        } else {
-            res.status(404).json({ error: 'User not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};*/
 
 const updateCurrentUser = async (req, res) => {
     try {
@@ -169,6 +138,16 @@ const updateCurrentUser = async (req, res) => {
     }
 };
 
+const logoutUser = (req, res) => {
+    try {
+        res.clearCookie('jwt');
+        res.status(200).json({ message: 'Vous êtes désormais déconnecté' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { logoutUser };
 
 
 const deleteCurrentUser = (req, res) => {
@@ -181,4 +160,4 @@ const deleteCurrentUser = (req, res) => {
         });
 };
 
-module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, deleteCurrentUser };
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, logoutUser, deleteCurrentUser };
