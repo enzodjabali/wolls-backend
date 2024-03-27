@@ -47,7 +47,7 @@ const getGroupMembers = async (req, res) => {
         const groupMembers = await Promise.all(userIds.map(async userId => {
             const user = await User.findById(userId);
             const groupMembership = groupMemberships.find(membership => membership.user_id.toString() === userId.toString());
-            return { ...user.toObject(), is_administrator: groupMembership.is_administrator };
+            return { ...user.toObject(), is_administrator: groupMembership.is_administrator, has_accepted_invitation: groupMembership.has_accepted_invitation };
         }));
 
         res.status(200).json(groupMembers);
