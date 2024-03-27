@@ -56,7 +56,32 @@ const getGroupMembers = async (req, res) => {
     }
 };
 
+const deleteGroupMembership = async (req, res) => {
+    const { groupId, userId } = req.params;
+
+    try {
+        const group = await Group.findById(groupId);
+
+        if (!group) {
+            return res.status(404).json({ message: "Groupe introuvable" });
+        }
+
+        const membership = await GroupMembership.findOne({ user_id: userId, group_id: groupId });
+
+        if (!membership) {
+            return res.status(404).json({ message: "L'utilisateur n'est pas membre du groupe" });
+        }
+
+        await GroupMembership.findByIdAndDelete(membership._id);
+
+        res.status(200).json({ message: "L'utilisateur a été supprimé du groupe avec succès" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createGroupMembership,
-    getGroupMembers
+    getGroupMembers,
+    deleteGroupMembership
 };
