@@ -51,27 +51,28 @@ const authenticateUser = async (req, res) => {
     try {
         let { pseudonym, password } = req.body;
 
-        // Find the user in the database
+        // Find the user by pseudo
         const user = await User.findOne({ pseudonym });
 
         if (!user) {
-            return res.status(401).json({ error: 'Invalid pseudonym or password' });
+            return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
         }
 
         // Compare the password
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
-            return res.status(401).json({ error: 'Invalid pseudonym or password' });
+            return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
         }
 
         // Create and send a JWT token
-        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1d' }); // expires in 1 day
+        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
         res.status(200).json({ token });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Erreur lors de la connexion. Veuillez réessayer.' });
     }
 };
+
 
 const getUsersList = async (req, res) => {
     User.find({}, '_id pseudonym')
