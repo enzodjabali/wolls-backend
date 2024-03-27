@@ -12,7 +12,7 @@ const registerUser = async (req, res) => {
 
         // Check if passwords match
         if (password !== confirmPassword) {
-            return res.status(400).json({ error: "Passwords do not match" });
+            return res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
         }
 
         // Hash the password
@@ -21,12 +21,12 @@ const registerUser = async (req, res) => {
         // Check if email and pseudonym are unique
         const emailExists = await User.findOne({ email });
         if (emailExists) {
-            return res.status(400).json({ error: "Email already exists" });
+            return res.status(400).json({ error: "L'email existe déjà" });
         }
 
         const pseudonymExists = await User.findOne({ pseudonym });
         if (pseudonymExists) {
-            return res.status(400).json({ error: "Pseudonym already exists" });
+            return res.status(400).json({ error: "Le pseudo existe déjà" });
         }
 
         // Create new user instance
@@ -73,7 +73,6 @@ const authenticateUser = async (req, res) => {
     }
 };
 
-
 const getUsersList = async (req, res) => {
     User.find({}, '_id pseudonym')
         .then(result => {
@@ -96,25 +95,25 @@ const getCurrentUser = async (req, res) => {
 
 const updateCurrentUser = async (req, res) => {
     try {
-        // Récupérer l'utilisateur actuel
+        // Get the user
         const currentUser = await User.findById(req.userId);
 
-        // Vérifier si le mot de passe est fourni et s'il correspond à celui enregistré en base de données
+        // Checks if the password is provided and if it matches the one saved in the database
         if (req.body.password !== undefined && req.body.password !== null) {
             const isPasswordValid = await bcrypt.compare(req.body.password, currentUser.password);
             if (!isPasswordValid) {
                 return res.status(400).json({ error: 'Invalid password' });
             }
-            // Supprimer le champ password pour éviter qu'il ne soit mis à jour
+            // Remove the password field to prevent it from being updated
             delete req.body.password;
         }
 
-        // Supprimer le champ confirmPassword s'il est présent dans la requête
+        // Remove the confirmPassword field if it is present in the query
         if (req.body.confirmPassword) {
             delete req.body.confirmPassword;
         }
 
-        // Vérifier si d'autres champs que firstname, lastname, pseudonym et email sont fournis et les supprimer
+        // Checks if fields other than firstname, lastname, nickname and email are provided and removes them
         const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email'];
         Object.keys(req.body).forEach(key => {
             if (!allowedFields.includes(key)) {
@@ -122,17 +121,15 @@ const updateCurrentUser = async (req, res) => {
             }
         });
 
-        // Valider le schéma de mise à jour
+        // Validate the update schema and updates the user
         await updateUserSchema.validateAsync(req.body);
-
-        // Mettre à jour l'utilisateur
         const result = await User.findByIdAndUpdate(req.userId, req.body);
 
-        // Vérifier si l'utilisateur a été trouvé et mis à jour
+        // Checks if user was found and updated
         if (result) {
-            res.status(200).send('You have successfully updated your account');
+            res.status(200).send('Votre compte a été mis à jour');
         } else {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ error: 'Utilisateur introuvable' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -148,13 +145,10 @@ const logoutUser = (req, res) => {
     }
 };
 
-module.exports = { logoutUser };
-
-
 const deleteCurrentUser = (req, res) => {
     User.findByIdAndDelete({_id: req.userId})
         .then(result => {
-            res.send('Your account has been successfully deleted');
+            res.send('Votre compte a bien été supprimé');
         })
         .catch(err => {
             console.log(err);
