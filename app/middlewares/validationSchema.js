@@ -28,7 +28,7 @@ const createUserSchema = Joi.object({
         'string.email': 'L\'email doit être valide',
         'any.required': 'L\'email est requis',
     }),
-    password: Joi.string().min(2).required().messages({
+    password: Joi.string().min(4).required().messages({
         'string.empty': 'Le mot de passe est requis',
         'string.min': 'Le mot de passe doit avoir au moins 4 caractères',
         'any.required': 'Le mot de passe est requis',
