@@ -31,6 +31,10 @@
     {
       "name": "Refunds",
       "description": "Actions on group refunds"
+    },
+    {
+      "name": "Messages",
+      "description": "Actions on private and group messages"
     }
   ],
   "schemes": [
@@ -519,6 +523,136 @@
           }
         }
       }
+    },
+    "/v1/messages/private": {
+      "post": {
+        "tags": ["Messages"],
+        "description": "Send a private message",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/PrivateMessageRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/messages/group": {
+      "post": {
+        "tags": ["Messages"],
+        "description": "Send a group message",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/GroupMessageRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/messages/private/{userId}": {
+      "get": {
+        "tags": ["Messages"],
+        "description": "Get private messages with a user",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the user"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/v1/messages/group/{groupId}": {
+      "get": {
+        "tags": ["Messages"],
+        "description": "Get group messages",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -644,6 +778,32 @@
             "type": "string",
             "example": "609e8e51894f0b0008317211"
           }
+        }
+      }
+    },
+    "PrivateMessageRequestBody": {
+      "type": "object",
+      "properties": {
+        "recipientId": {
+          "type": "string",
+          "example": "66389f405fa20246d95e8324"
+        },
+        "message": {
+          "type": "string",
+          "example": "Hello World Private!"
+        }
+      }
+    },
+    "GroupMessageRequestBody": {
+      "type": "object",
+      "properties": {
+        "groupId": {
+          "type": "string",
+          "example": "66389fdf5fa20246d95e832e"
+        },
+        "message": {
+          "type": "string",
+          "example": "Hello World Group!"
         }
       }
     }
