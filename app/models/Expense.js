@@ -25,7 +25,12 @@ const expenseSchema = new Schema({
         required: true
     },
     category: {
-        type: String
+        type: String,
+        required: false
+    },
+    refund_recipients: {
+        type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+        required: true
     }
 });
 

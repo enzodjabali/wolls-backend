@@ -30,16 +30,9 @@ const createExpense = async (req, res) => {
         await createExpenseSchema.validateAsync(req.body);
 
         // Extract data from request body
-        const { title, amount, category, group_id } = req.body;
+        const { title, amount, category, group_id, refund_recipients } = req.body;
         const creator_id = req.userId;
         const date = Date.now(); // Set current date
-
-        // Check if the current user has accepted the group invitation
-        const membership = await GroupMembership.findOne({ user_id: creator_id, group_id: group_id });
-
-        if (!membership || !membership.has_accepted_invitation) {
-            return res.status(403).json({ message: "You do not have permission to create expenses for this group" });
-        }
 
         // Create new expense instance
         const newExpense = new Expense({
@@ -48,7 +41,8 @@ const createExpense = async (req, res) => {
             date,
             creator_id,
             group_id,
-            category
+            category,
+            refund_recipients
         });
 
         // Save the new expense to the database
