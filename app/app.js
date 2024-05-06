@@ -13,8 +13,8 @@ const groupRoutes = require('./routes/groupRoutes');
 const groupMembershipsRoutes = require('./routes/groupMembershipsRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const refundRoutes = require('./routes/refundRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 const testRoutes = require('./routes/testRoutes');
-
 
 APP.use(express.json());
 
@@ -40,6 +40,7 @@ APP.use('/v1/groups', groupRoutes);
 APP.use('/v1/groups/memberships', groupMembershipsRoutes);
 APP.use('/v1/expenses', expenseRoutes);
 APP.use('/v1/refunds', refundRoutes);
+APP.use('/v1/messages', messageRoutes);
 APP.use('/v1/tests', testRoutes);
 
 const swaggerUi = require('swagger-ui-express');
