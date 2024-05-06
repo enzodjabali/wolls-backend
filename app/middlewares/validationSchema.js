@@ -86,9 +86,6 @@ const updateExpenseSchema = Joi.object({
 //////////////////////////////////////////////////////////////////////
 
 const sendMessageSchema = Joi.object({
-    senderId: Joi.string().required().messages({
-        'any.required': 'L\'identifiant de l\'expéditeur est requis',
-    }),
     recipientId: Joi.string().messages({
         'any.required': 'L\'identifiant du destinataire est requis',
     }),
@@ -98,9 +95,6 @@ const sendMessageSchema = Joi.object({
     message: Joi.string().required().messages({
         'string.empty': 'Le message ne peut pas être vide',
         'any.required': 'Le message est requis',
-    }),
-    timestamp: Joi.date().default(Date.now).messages({
-        'date.base': 'Format de date invalide',
     }),
 });
 
