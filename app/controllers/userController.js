@@ -95,25 +95,11 @@ const getCurrentUser = async (req, res) => {
 
 const updateCurrentUser = async (req, res) => {
     try {
-        // Get the user
-        const currentUser = await User.findById(req.userId);
+        // Remove the password-related fields from the request body
+        delete req.body.password;
+        delete req.body.confirmPassword;
 
-        // Checks if the password is provided and if it matches the one saved in the database
-        if (req.body.password !== undefined && req.body.password !== null) {
-            const isPasswordValid = await bcrypt.compare(req.body.password, currentUser.password);
-            if (!isPasswordValid) {
-                return res.status(400).json({ error: 'Invalid password' });
-            }
-            // Remove the password field to prevent it from being updated
-            delete req.body.password;
-        }
-
-        // Remove the confirmPassword field if it is present in the query
-        if (req.body.confirmPassword) {
-            delete req.body.confirmPassword;
-        }
-
-        // Checks if fields other than firstname, lastname, nickname and email are provided and removes them
+        // Checks if fields other than firstname, lastname, pseudonym, and email are provided and removes them
         const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email'];
         Object.keys(req.body).forEach(key => {
             if (!allowedFields.includes(key)) {
@@ -131,6 +117,36 @@ const updateCurrentUser = async (req, res) => {
         } else {
             res.status(404).json({ error: 'Utilisateur introuvable' });
         }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const updatePasswordCurrentUser = async (req, res) => {
+    try {
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        // Get the user
+        const currentUser = await User.findById(req.userId);
+
+        // Checks if the current password matches the one saved in the database
+        const isPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ error: 'Mot de passe actuel incorrect' });
+        }
+
+        // Validate the new password and confirm password
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ error: 'Les nouveaux mots de passe ne correspondent pas' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password
+        await User.findByIdAndUpdate(req.userId, { password: hashedPassword });
+
+        res.status(200).send('Votre mot de passe a été mis à jour avec succès');
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -173,4 +189,4 @@ const getUserById = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, logoutUser, deleteCurrentUser, getUserById };
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById };
