@@ -23,6 +23,14 @@
     {
       "name": "Group Memberships",
       "description": "Actions on group memberships"
+    },
+    {
+      "name": "Expenses",
+      "description": "Actions on group expenses"
+    },
+    {
+      "name": "Refunds",
+      "description": "Actions on group refunds"
     }
   ],
   "schemes": [
@@ -64,6 +72,30 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/groups/": {
+      "get": {
+        "tags": ["Groups"],
+        "description": "Get groups which the current user has access",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -188,6 +220,30 @@
         }
       }
     },
+    "/v1/users": {
+      "get": {
+        "tags": ["Users"],
+        "description": "Get all users",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/v1/users/me": {
       "get": {
         "tags": ["Users"],
@@ -264,6 +320,178 @@
           },
           "401": {
             "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/v1/expenses/{groupId}": {
+      "get": {
+        "tags": ["Expenses"],
+        "description": "Get all expenses for a specific group",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/v1/expenses": {
+      "post": {
+        "tags": ["Expenses"],
+        "description": "Create a new expense",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ExpenseRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/expenses/{id}": {
+      "put": {
+        "tags": ["Expenses"],
+        "description": "Update an expense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the expense"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ExpenseRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Expenses"],
+        "description": "Delete an expense",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the expense"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/refunds/{groupId}": {
+      "get": {
+        "tags": ["Refunds"],
+        "description": "Get refunds for a specific group",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -364,6 +592,34 @@
         "confirmPassword": {
           "type": "string",
           "example": "newpassword123"
+        }
+      }
+    },
+    "ExpenseRequestBody": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "Dinner"
+        },
+        "amount": {
+          "type": "number",
+          "example": 50.0
+        },
+        "group_id": {
+          "type": "string",
+          "example": "609e8e51894f0b0008317222"
+        },
+        "category": {
+          "type": "string",
+          "example": "Food"
+        },
+        "refund_recipients": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "609e8e51894f0b0008317211"
+          }
         }
       }
     }
