@@ -1,4 +1,4 @@
-const Message = require('../models/message');
+const Message = require('../models/Message');
 const GroupMembership = require('../models/GroupMembership');
 const { sendMessageSchema } = require('../middlewares/validationSchema');
 
