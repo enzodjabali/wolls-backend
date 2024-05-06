@@ -1,13 +1,13 @@
 const Message = require('../models/message');
 
-const sendGroupMessage = async (req, res) => {
-    const { groupId, message } = req.body;
+const sendPrivateMessage = async (req, res) => {
+    const { recipientId, message } = req.body;
     const senderId = req.userId; // Assuming user is authenticated
 
     try {
         const newMessage = new Message({
             senderId,
-            groupId,
+            recipientId,
             message
         });
 
@@ -18,14 +18,14 @@ const sendGroupMessage = async (req, res) => {
     }
 };
 
-const sendPrivateMessage = async (req, res) => {
-    const { recipientId, message } = req.body;
+const sendGroupMessage = async (req, res) => {
+    const { groupId, message } = req.body;
     const senderId = req.userId; // Assuming user is authenticated
 
     try {
         const newMessage = new Message({
             senderId,
-            recipientId,
+            groupId,
             message
         });
 

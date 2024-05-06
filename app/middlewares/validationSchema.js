@@ -82,6 +82,29 @@ const updateExpenseSchema = Joi.object({
 });
 
 //////////////////////////////////////////////////////////////////////
+//                            Messages                              //
+//////////////////////////////////////////////////////////////////////
+
+const sendMessageSchema = Joi.object({
+    senderId: Joi.string().required().messages({
+        'any.required': 'L\'identifiant de l\'expéditeur est requis',
+    }),
+    recipientId: Joi.string().messages({
+        'any.required': 'L\'identifiant du destinataire est requis',
+    }),
+    groupId: Joi.string().messages({
+        'any.required': 'L\'identifiant du groupe est requis',
+    }),
+    message: Joi.string().required().messages({
+        'string.empty': 'Le message ne peut pas être vide',
+        'any.required': 'Le message est requis',
+    }),
+    timestamp: Joi.date().default(Date.now).messages({
+        'date.base': 'Format de date invalide',
+    }),
+});
+
+//////////////////////////////////////////////////////////////////////
 //                             Test                                 //
 //////////////////////////////////////////////////////////////////////
 
@@ -107,6 +130,8 @@ module.exports = {
     // Expense
     createExpenseSchema,
     updateExpenseSchema,
+    // Messages
+    sendMessageSchema,
     // Test
     createTestSchema,
     updateTestSchema,
