@@ -155,4 +155,22 @@ const deleteCurrentUser = (req, res) => {
         });
 };
 
-module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, logoutUser, deleteCurrentUser };
+const getUserById = async (req, res) => {
+    const userId = req.params.id; // Extract user ID from request parameters
+
+    try {
+        // Find the user by ID
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Return only the pseudonym field
+        res.status(200).json({ pseudonym: user.pseudonym });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, logoutUser, deleteCurrentUser, getUserById };
