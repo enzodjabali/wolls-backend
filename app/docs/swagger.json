@@ -33,6 +33,10 @@
       "description": "Actions on group refunds"
     },
     {
+      "name": "Balances",
+      "description": "Actions on group balances"
+    },
+    {
       "name": "Messages",
       "description": "Actions on private and group messages"
     }
@@ -53,6 +57,35 @@
       "post": {
         "tags": ["Groups"],
         "description": "Create a new group",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/GroupRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Groups"],
+        "description": "Update a new group",
         "parameters": [
           {
             "name": "Authorization",
@@ -475,7 +508,7 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/ExpenseRequestBody"
+              "$ref": "#/definitions/ExpenseRequestBodyUpdate"
             }
           }
         ],
@@ -690,6 +723,37 @@
           }
         }
       }
+    },
+    "/v1/balances/{groupId}": {
+      "get": {
+        "tags": ["Balances"],
+        "description": "Get group balances",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -813,6 +877,30 @@
         "group_id": {
           "type": "string",
           "example": "609e8e51894f0b0008317222"
+        },
+        "category": {
+          "type": "string",
+          "example": "Food"
+        },
+        "refund_recipients": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "609e8e51894f0b0008317211"
+          }
+        }
+      }
+    },
+    "ExpenseRequestBodyUpdate": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "Dinner"
+        },
+        "amount": {
+          "type": "number",
+          "example": 50.0
         },
         "category": {
           "type": "string",
