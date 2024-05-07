@@ -1,28 +1,8 @@
 const Expense = require('../models/Expense');
 const { getRefundRecipients } = require('../middlewares/refundUtils');
 
-// Function to get refunds for a specific group
-const getRefunds = async (req, res) => {
-    const groupId = req.params.groupId; // Extract group ID from request parameters
-
-    try {
-        // Retrieve expenses for the group
-        const expenses = await Expense.find({ group_id: groupId });
-
-        // Calculate refunds based on expenses
-        const refunds = calculateRefunds(expenses);
-
-        res.status(200).json(refunds); // Respond with the calculated refunds
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
 // Function to calculate refunds based on expenses
 const calculateRefunds = (expenses) => {
-    // Placeholder logic to calculate refunds based on expenses
-    // You need to implement this according to your refund calculation requirements
-    // For demonstration purposes, returning an empty array
     const refunds = [];
 
     // Iterate over expenses to calculate refunds
@@ -40,6 +20,23 @@ const calculateRefunds = (expenses) => {
     });
 
     return refunds;
+};
+
+// Function to get refunds for a specific group
+const getRefunds = async (req, res) => {
+    const groupId = req.params.groupId; // Extract group ID from request parameters
+
+    try {
+        // Retrieve expenses for the group
+        const expenses = await Expense.find({ group_id: groupId });
+
+        // Calculate refunds based on expenses
+        const refunds = calculateRefunds(expenses);
+
+        res.status(200).json(refunds); // Respond with the calculated refunds
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
 module.exports = { getRefunds };

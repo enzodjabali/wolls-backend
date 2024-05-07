@@ -13,6 +13,7 @@ const groupRoutes = require('./routes/groupRoutes');
 const groupMembershipsRoutes = require('./routes/groupMembershipsRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const refundRoutes = require('./routes/refundRoutes');
+const balanceRoutes = require('./routes/balanceRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const testRoutes = require('./routes/testRoutes');
 
@@ -40,6 +41,7 @@ APP.use('/v1/groups', groupRoutes);
 APP.use('/v1/groups/memberships', groupMembershipsRoutes);
 APP.use('/v1/expenses', expenseRoutes);
 APP.use('/v1/refunds', refundRoutes);
+APP.use('/v1/balances', balanceRoutes);
 APP.use('/v1/messages', messageRoutes);
 APP.use('/v1/tests', testRoutes);
 
