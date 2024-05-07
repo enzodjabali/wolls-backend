@@ -81,10 +81,11 @@ const updateExpense = async (req, res) => {
         }
 
         // Update expense data
-        const { title, amount, category } = req.body;
+        const { title, amount, category, refund_recipients } = req.body;
         expense.title = title;
         expense.amount = amount;
         expense.category = category;
+        expense.refund_recipients = refund_recipients;
 
         // Save updated expense to the database
         const updatedExpense = await expense.save();
