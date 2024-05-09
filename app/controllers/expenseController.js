@@ -27,24 +27,39 @@ const getExpenses = async (req, res) => {
 // Create expense
 const createExpense = async (req, res) => {
     try {
-        await createExpenseSchema.validateAsync(req.body);
-
+        // Extraction et préparation des données pour validation
         const { title, amount, category, group_id, refund_recipients } = req.body;
+        const receiptPath = req.file ? req.file.path : null;
+        const parsedRecipients = JSON.parse(refund_recipients);
+
+        // Création d'un objet pour validation
+        const dataToValidate = {
+            title,
+            amount: parseFloat(amount), // Conversion en nombre
+            category,
+            group_id,
+            refund_recipients: parsedRecipients
+        };
+
+        // Validation des données extraites
+        await createExpenseSchema.validateAsync(dataToValidate);
+
+        // Création de la nouvelle dépense
         const creator_id = req.userId;
         const date = Date.now();
-        const receiptPath = req.file ? req.file.path : null;
-
+        
         const newExpense = new Expense({
             title,
-            amount,
+            amount: parseFloat(amount),
             date,
             creator_id,
             group_id,
             category,
-            refund_recipients,
-            receipt: receiptPath
+            refund_recipients: parsedRecipients,
+            receipt: receiptPath // Ajout du chemin du fichier
         });
 
+        // Sauvegarde de la dépense
         const savedExpense = await newExpense.save();
         res.status(201).json(savedExpense);
     } catch (error) {
