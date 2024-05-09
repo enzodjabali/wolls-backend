@@ -1,6 +1,7 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
 const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/validationSchema');
+const path = require('path');
 
 // Function to get all expenses for a specific group
 const getExpenses = async (req, res) => {
@@ -26,32 +27,42 @@ const getExpenses = async (req, res) => {
 // Create expense
 const createExpense = async (req, res) => {
     try {
-        // Validate request body
-        await createExpenseSchema.validateAsync(req.body);
-
-        // Extract data from request body
+        // Extraction et préparation des données pour validation
         const { title, amount, category, group_id, refund_recipients } = req.body;
-        const creator_id = req.userId;
-        const date = Date.now(); // Set current date
+        const receiptPath = req.file ? req.file.path : null;
+        const parsedRecipients = JSON.parse(refund_recipients);
 
-        // Create new expense instance
+        // Création d'un objet pour validation
+        const dataToValidate = {
+            title,
+            amount: parseFloat(amount), // Conversion en nombre
+            category,
+            group_id,
+            refund_recipients: parsedRecipients
+        };
+
+        // Validation des données extraites
+        await createExpenseSchema.validateAsync(dataToValidate);
+
+        // Création de la nouvelle dépense
+        const creator_id = req.userId;
+        const date = Date.now();
+        
         const newExpense = new Expense({
             title,
-            amount,
+            amount: parseFloat(amount),
             date,
             creator_id,
             group_id,
             category,
-            refund_recipients
+            refund_recipients: parsedRecipients,
+            receipt: receiptPath // Ajout du chemin du fichier
         });
 
-        // Save the new expense to the database
+        // Sauvegarde de la dépense
         const savedExpense = await newExpense.save();
-
-        // Respond with the saved expense
         res.status(201).json(savedExpense);
     } catch (error) {
-        // Handle validation errors
         if (error.isJoi) {
             res.status(400).json({ message: error.details[0].message });
         } else {
