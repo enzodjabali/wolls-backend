@@ -31,10 +31,6 @@ const expenseSchema = new Schema({
     refund_recipients: {
         type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         required: true
-    },
-    receipt: { 
-        type: String,
-        required: false
     }
 });
 
