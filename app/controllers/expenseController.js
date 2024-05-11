@@ -152,4 +152,4 @@ const deleteExpense = async (req, res) => {
     }
 };
 
-module.exports = { getExpenses, createExpense, updateExpense, deleteExpense };
+module.exports = { getExpenses, getExpense, createExpense, updateExpense, deleteExpense };
