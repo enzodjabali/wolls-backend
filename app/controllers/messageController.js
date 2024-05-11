@@ -1,6 +1,7 @@
 const Message = require('../models/Message');
 const GroupMembership = require('../models/GroupMembership');
 const { sendMessageSchema } = require('../middlewares/validationSchema');
+const debug = require('debug')('app:messageController');
 
 const sendPrivateMessage = async (req, res) => {
     try {
