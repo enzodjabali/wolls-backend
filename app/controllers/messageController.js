@@ -53,9 +53,15 @@ const sendGroupMessage = async (req, res) => {
 const getPrivateMessages = async (req, res) => {
     try {
         const userId = req.userId; // Assuming user is authenticated
-        const { recipientId } = req.params;
+        const recipientId = req.params.recipientId; // Correct extraction
 
-        const messages = await Message.find({ senderId: userId, recipientId });
+        // Fetch messages where either the sender or the recipient is the current user
+        const messages = await Message.find({
+            $or: [
+                { senderId: userId, recipientId: recipientId },
+                { senderId: recipientId, recipientId: userId }
+            ]
+        });
 
         res.status(200).json(messages);
     } catch (error) {
