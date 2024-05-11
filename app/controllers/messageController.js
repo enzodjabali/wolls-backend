@@ -55,6 +55,9 @@ const getPrivateMessages = async (req, res) => {
         const userId = req.userId; // Assuming user is authenticated
         const recipientId = req.params.recipientId; // Correct extraction
 
+        console.log(`Fetching private messages between userId: ${userId} and recipientId: ${recipientId}`);
+        debug(`Fetching private messages between userId: ${userId} and recipientId: ${recipientId}`);
+
         // Fetch messages where either the sender or the recipient is the current user
         const messages = await Message.find({
             $or: [
