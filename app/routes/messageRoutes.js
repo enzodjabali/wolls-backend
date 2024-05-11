@@ -6,7 +6,7 @@ const authenticateJWT = require('../middlewares/auth');
 
 router.post('/private', authenticateJWT, sendPrivateMessage);
 router.post('/group', authenticateJWT, sendGroupMessage);
-router.get('/private/:userId', authenticateJWT, getPrivateMessages);
+router.get('/private/:recipientId', authenticateJWT, getPrivateMessages);
 router.get('/group/:groupId', authenticateJWT, getGroupMessages);
 
 module.exports = router;
