@@ -1,7 +1,6 @@
 const Message = require('../models/Message');
 const GroupMembership = require('../models/GroupMembership');
 const { sendMessageSchema } = require('../middlewares/validationSchema');
-const debug = require('debug')('app:messageController');
 
 const sendPrivateMessage = async (req, res) => {
     try {
@@ -53,13 +52,9 @@ const sendGroupMessage = async (req, res) => {
 
 const getPrivateMessages = async (req, res) => {
     try {
-        const userId = req.userId; // Assuming user is authenticated
+        const userId = req.userId;
         const { recipientId } = req.params;
 
-        console.log(`Fetching private messages between userId: ${userId} and recipientId: ${recipientId}`);
-        debug(`Fetching private messages between userId: ${userId} and recipientId: ${recipientId}`);
-
-        // Fetch messages where either the sender or the recipient is the current user
         const messages = await Message.find({
             $or: [
                 { senderId: userId, recipientId: recipientId },
