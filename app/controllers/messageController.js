@@ -54,7 +54,7 @@ const sendGroupMessage = async (req, res) => {
 const getPrivateMessages = async (req, res) => {
     try {
         const userId = req.userId; // Assuming user is authenticated
-        const recipientId = req.params.recipientId; // Correct extraction
+        const { recipientId } = req.params;
 
         console.log(`Fetching private messages between userId: ${userId} and recipientId: ${recipientId}`);
         debug(`Fetching private messages between userId: ${userId} and recipientId: ${recipientId}`);
