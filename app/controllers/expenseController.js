@@ -23,6 +23,29 @@ const getExpenses = async (req, res) => {
     }
 };
 
+// Function to get a specific expense by ID
+const getExpense = async (req, res) => {
+    const { groupId, expenseId } = req.params;
+
+    try {
+        const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
+
+        if (!membership || !membership.has_accepted_invitation) {
+            return res.status(403).json({ message: "You do not have permission to view this expense" });
+        }
+
+        const expense = await Expense.findOne({ _id: expenseId, group_id: groupId });
+
+        if (!expense) {
+            return res.status(404).json({ message: "Expense not found" });
+        }
+
+        res.status(200).json(expense);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Create expense
 const createExpense = async (req, res) => {
     try {
