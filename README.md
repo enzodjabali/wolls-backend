@@ -24,6 +24,16 @@ Password: ``24UKMZ5xrgUQWhQKP9qa9A9``
 
 <hr>
 
+Minio S3 is accessible on ``127.0.0.1:9161``
+
+Minio S3 creditentials:
+<br>
+User: ``root``
+<br>
+Password: ``hhcXPJRm0h91bzC6qtLG5U``
+
+<hr>
+
 Related projects:<br>
 Web: https://github.com/enzodjabali/goodfriends-web<br>
 Mobile: https://github.com/enzodjabali/goodfriends-mobile
