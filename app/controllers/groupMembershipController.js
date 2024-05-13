@@ -99,9 +99,35 @@ const getInvitations = async (req, res) => {
     }
 };
 
+const acceptInvitation = async (req, res) => {
+    const { group_id } = req.body;
+    const userId = req.userId;
+
+    try {
+        // Find the group membership
+        const groupMembership = await GroupMembership.findOne({ user_id: userId, group_id });
+
+        // Check if the group membership exists
+        if (!groupMembership) {
+            return res.status(404).json({ message: "L'utilisateur n'a pas d'invitation pour ce groupe" });
+        }
+
+        // Update the has_accepted_invitation field to true
+        groupMembership.has_accepted_invitation = true;
+
+        // Save the updated group membership
+        await groupMembership.save();
+
+        res.status(200).json({ message: "L'invitation a été acceptée avec succès" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createGroupMembership,
     getGroupMembers,
     deleteGroupMembership,
-    getInvitations
+    getInvitations,
+    acceptInvitation
 };
