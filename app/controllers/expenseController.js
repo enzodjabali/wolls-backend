@@ -1,5 +1,6 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
+const minioClient = require('../middlewares/minioClient');
 const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/validationSchema');
 
 // Function to get all expenses for a specific group
@@ -46,16 +47,23 @@ const getExpense = async (req, res) => {
     }
 };
 
-// Create expense
 const createExpense = async (req, res) => {
     try {
         // Validate request body
         await createExpenseSchema.validateAsync(req.body);
 
         // Extract data from request body
-        const { title, amount, category, group_id, refund_recipients } = req.body;
+        const { title, amount, category, group_id, refund_recipients, attachment } = req.body;
         const creator_id = req.userId;
         const date = Date.now(); // Set current date
+
+        let expenseAttachment = "";
+
+        if (attachment) {
+            const matches = attachment.data.match(/^data:image\/([a-zA-Z0-9]+);base64,/);
+            const attachmentExtension = matches && matches[1] ? matches[1] : "jpeg";
+            expenseAttachment = Math.random().toString(36).substring(2, 20) + '.' + attachmentExtension ?? "";
+        }
 
         // Create new expense instance
         const newExpense = new Expense({
@@ -65,20 +73,35 @@ const createExpense = async (req, res) => {
             creator_id,
             group_id,
             category,
-            refund_recipients
+            refund_recipients,
+            attachment: expenseAttachment
         });
 
         // Save the new expense to the database
         const savedExpense = await newExpense.save();
 
-        // Respond with the saved expense
-        res.status(201).json(savedExpense);
+        if (expenseAttachment !== "") {
+            const decodedFileContent = Buffer.from(attachment.data, 'base64');
+
+            minioClient.putObject("goodfriends", expenseAttachment, decodedFileContent, function (error, etag) {
+                if (error) {
+                    console.error(error);
+                    // Rollback expense creation
+                    Expense.deleteOne({ _id: savedExpense._id }).exec();
+                    return res.status(500).json({ error: 'Error saving image to Minio' });
+                } else {
+                    return res.status(201).json(savedExpense);
+                }
+            });
+        } else {
+            return res.status(201).json(savedExpense);
+        }
     } catch (error) {
         // Handle validation errors
         if (error.isJoi) {
-            res.status(400).json({ message: error.details[0].message });
+            return res.status(400).json({ message: error.details[0].message });
         } else {
-            res.status(500).json({ message: error.message });
+            return res.status(500).json({ message: error.message });
         }
     }
 };

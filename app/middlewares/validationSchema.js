@@ -71,14 +71,16 @@ const createExpenseSchema = Joi.object({
     amount: Joi.number().min(0).required(),
     group_id: Joi.string().required(),
     category: Joi.string().min(2).max(30),
-    refund_recipients: Joi.array().items(Joi.string()).required()
+    refund_recipients: Joi.array().items(Joi.string()).required(),
+    attachment: Joi.any()
 });
 
 const updateExpenseSchema = Joi.object({
     title: Joi.string().min(2).max(100),
     amount: Joi.number().min(0),
     category: Joi.string().min(2).max(30),
-    refund_recipients: Joi.array().items(Joi.string())
+    refund_recipients: Joi.array().items(Joi.string()),
+    attachment: Joi.any()
 });
 
 //////////////////////////////////////////////////////////////////////
