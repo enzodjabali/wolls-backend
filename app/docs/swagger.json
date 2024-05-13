@@ -869,9 +869,9 @@
     "GroupMembershipRequestBody": {
       "type": "object",
       "properties": {
-        "user_id": {
+        "user_pseudonym": {
           "type": "string",
-          "example": "609e8e51894f0b0008317211"
+          "example": "JoeDoe2024"
         },
         "group_id": {
           "type": "string",

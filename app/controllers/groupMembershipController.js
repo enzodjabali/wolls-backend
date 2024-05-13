@@ -93,15 +93,7 @@ const getInvitations = async (req, res) => {
         // Find the corresponding groups
         const groups = await Group.find({ _id: { $in: groupIds } });
 
-        // Prepare response with group details
-        const invitations = groups.map(group => ({
-            group_id: group._id,
-            group_name: group.name,
-            user_id: userId,
-            user_name: req.user.pseudonym // Assuming user has a pseudonym field
-        }));
-
-        res.status(200).json(invitations);
+        res.status(200).json(groups);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
