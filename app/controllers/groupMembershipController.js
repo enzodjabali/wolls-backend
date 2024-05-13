@@ -45,9 +45,9 @@ const getGroupMembers = async (req, res) => {
         const userIds = groupMemberships.map(membership => membership.user_id);
 
         const groupMembers = await Promise.all(userIds.map(async userId => {
-            const user = await User.findById(userId);
+            const user = await User.findById(userId).select('_id pseudonym'); // Select only _id and pseudonym
             const groupMembership = groupMemberships.find(membership => membership.user_id.toString() === userId.toString());
-            return { ...user.toObject(), is_administrator: groupMembership.is_administrator, has_accepted_invitation: groupMembership.has_accepted_invitation };
+            return { _id: user._id, pseudonym: user.pseudonym, is_administrator: groupMembership.is_administrator, has_accepted_invitation: groupMembership.has_accepted_invitation };
         }));
 
         res.status(200).json(groupMembers);
@@ -80,8 +80,36 @@ const deleteGroupMembership = async (req, res) => {
     }
 };
 
+const getInvitations = async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        // Find group memberships where the user has_accepted_invitation is false
+        const groupMemberships = await GroupMembership.find({ user_id: userId, has_accepted_invitation: false });
+
+        // Extract group ids from group memberships
+        const groupIds = groupMemberships.map(membership => membership.group_id);
+
+        // Find the corresponding groups
+        const groups = await Group.find({ _id: { $in: groupIds } });
+
+        // Prepare response with group details
+        const invitations = groups.map(group => ({
+            group_id: group._id,
+            group_name: group.name,
+            user_id: userId,
+            user_name: req.user.pseudonym // Assuming user has a pseudonym field
+        }));
+
+        res.status(200).json(invitations);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createGroupMembership,
     getGroupMembers,
-    deleteGroupMembership
+    deleteGroupMembership,
+    getInvitations
 };
