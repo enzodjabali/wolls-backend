@@ -3,73 +3,42 @@
 
 <p float="left">
     <img src="https://img.shields.io/static/v1?label=License&message=MIT&color=blue">
-    <img src="https://img.shields.io/static/v1?label=Version&message=0.3&color=blue">
+    <img src="https://img.shields.io/static/v1?label=Version&message=0.4&color=blue">
 </p>
 
 Manage shared expenses with Goodfriends.
 A full JavaScript app developed using Node.js, MongoDB, React, and React Native.
-Declare expenses, balance accounts, and track reimbursements effortlessly. 
+Declare expenses, balance accounts, and track reimbursements. 
 Features include group creation, expense declaration, reimbursement calculation, payment options, and instant messaging. 
 Export summaries and view expense statistics. Simplify expense management for any group.
 
+See also: <a href="https://github.com/enzodjabali/goodfriends-web">GOODFRIENDS WEB</a> and <a href="https://github.com/enzodjabali/goodfriends-mobile">GOODFRIENDS MOBILE</a>.
+
 ## Deploy locally the project with docker 🐳
 
-Install npm packages:
-``docker compose run api npm --prefix /app install``
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Install-docker" target="_blank">1. Install docker</a><br>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Install-git" target="_blank">2. Install git</a><br>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Clone-the-project" target="_blank">3. Clone the project</a><br>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Fill-the-required-credentials" target="_blank">4. Fill the required credentials</a><br>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Run-the-project" target="_blank">5. Run the project</a>
 
-Start:
-``docker compose up``
+Houra! After completing these steps, the project should be running. You can access it by <a href="http://127.0.0.1:3000/api-docs" target="_blank">clicking here</a> 🎉
 
-That's it. Your API is now available on ``127.0.0.1:3000`` 🎉
+## Services & credentials
 
-<hr>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Swagger-UI" target="_blank">Swagger UI</a><br>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Mongo-Express" target="_blank">Mongo Express</a><br>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Minio-S3" target="_blank">Minio S3</a>
 
-Swagger is accessible on ``127.0.0.1:3000/api-docs``
+## Production
 
-<hr>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Access-the-production-server" target="_blank">Access the production server</a><br>
+<a href="https://github.com/enzodjabali/goodfriends-backend/wiki/Update-the-project" target="_blank">Update the project</a>
 
-Mongo Express is accessible on ``127.0.0.1:3001``
+You can access the production by <a href="https://api.goodfriends.tech/api-docs/" target="_blank">clicking here</a>.
 
-Mongo Express credentials:
-<br>
-User: ``root``
-<br>
-Password: ``24UKMZ5xrgUQWhQKP9qa9A9``
+## Q&A
 
-<hr>
-
-Minio S3 is accessible on ``127.0.0.1:9161``
-
-Minio S3 creditentials:
-<br>
-User: ``root``
-<br>
-Password: ``hhcXPJRm0h91bzC6qtLG5U``
-
-<hr>
-
-Related projects:<br>
-Web: https://github.com/enzodjabali/goodfriends-web<br>
-Mobile: https://github.com/enzodjabali/goodfriends-mobile
-
-<hr>
-
-Connect to the prod server :
-
-``ssh -p37538 goodfriends@141.94.244.54``
-
-Password: ``G08!f3n8@2/``
-
-Update the prod app :
-
-``cd goodfriends-backend``
-
-``git pull``
-
-``docker compose run api npm --prefix /app install``
-
-``docker compose up -d``
-
-That's it!
+Contact us at <a mailto="support@goodfriends.tech">support@goodfriends.tech</a> for any further question.
 
 <img src="https://media.discordapp.net/attachments/774340712585625603/1239548866936967189/image.png?ex=66435357&is=664201d7&hm=bfc645ffcab272e3595e933dba0e4f3578bc076deb2feee0def4b2744fed09d3&=&format=webp&quality=lossless&width=852&height=700" height="200" />
