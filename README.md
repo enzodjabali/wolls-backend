@@ -24,6 +24,12 @@ Password: ``24UKMZ5xrgUQWhQKP9qa9A9``
 
 <hr>
 
+Related projects:<br>
+Web: https://github.com/enzodjabali/goodfriends-web<br>
+Mobile: https://github.com/enzodjabali/goodfriends-mobile
+
+<hr>
+
 Connect to the prod server :
 
 ``ssh -p37538 goodfriends@141.94.244.54``
