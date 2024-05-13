@@ -28,3 +28,14 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/
     depends_on:
       - mongo
+
+  minio:
+    image: docker.io/bitnami/minio:${MINIO_S3_VERSION}
+    ports:
+      - '${MINIO_S3_PORT}:9001'
+    environment:
+      - MINIO_ROOT_USER=${MINIO_S3_USERNAME}
+      - MINIO_ROOT_PASSWORD=${MINIO_S3_PASSWORD}
+      - MINIO_DEFAULT_BUCKETS=goodfriends
+    depends_on:
+      - api
