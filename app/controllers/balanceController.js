@@ -1,6 +1,3 @@
-const Expense = require('../models/Expense');
-const GroupMembership = require("../models/GroupMembership");
-
 const getBalances = async (req, res) => {
     const groupId = req.params.groupId;
     const userId = req.userId;
@@ -23,13 +20,19 @@ const getBalances = async (req, res) => {
             // If the current user paid the expense
             if (expense.creator_id === userId) {
                 expense.refund_recipients.forEach(recipient => {
-                    if (!balances[recipient]) balances[recipient] = 0;
-                    balances[recipient] += expense.refund_recipients.find(r => r.recipient_id.toString() === recipient).refund_amount;
+                    if (recipient && recipient.recipient_id) {
+                        const recipientId = recipient.recipient_id.toString();
+                        if (!balances[recipientId]) balances[recipientId] = 0;
+                        balances[recipientId] += recipient.refund_amount;
+                    }
                 });
             } else if (expense.refund_recipients.map(r => r.recipient_id.toString()).includes(userId)) {
                 // If the current user was one of the recipients of the expense
-                if (!balances[expense.creator_id]) balances[expense.creator_id] = 0;
-                balances[expense.creator_id] -= expense.refund_recipients.find(r => r.recipient_id.toString() === userId).refund_amount;
+                const recipientAmount = expense.refund_recipients.find(r => r.recipient_id.toString() === userId);
+                if (recipientAmount) {
+                    if (!balances[expense.creator_id]) balances[expense.creator_id] = 0;
+                    balances[expense.creator_id] -= recipientAmount.refund_amount;
+                }
             }
         });
 
