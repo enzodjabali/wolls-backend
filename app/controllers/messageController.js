@@ -33,6 +33,13 @@ const sendGroupMessage = async (req, res) => {
         const { groupId, message } = req.body;
         const senderId = req.userId; // Assuming user is authenticated
 
+        // Check if the current user is a member of the group
+        const isMember = await GroupMembership.exists({ user_id: senderId, group_id: groupId });
+
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not a member of this group" });
+        }
+
         try {
             const newMessage = new Message({
                 senderId,
@@ -76,7 +83,7 @@ const getGroupMessages = async (req, res) => {
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
 
         if (!membership || !membership.has_accepted_invitation) {
-            return res.status(403).json({ message: "You do not have permission to view expenses for this group" });
+            return res.status(403).json({ message: "You do not have permission to view the messages of this group" });
         }
 
         const messages = await Message.find({ groupId });
