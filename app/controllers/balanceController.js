@@ -1,3 +1,6 @@
+const Expense = require('../models/Expense');
+const GroupMembership = require("../models/GroupMembership");
+
 const getBalances = async (req, res) => {
     const groupId = req.params.groupId;
     const userId = req.userId;
