@@ -2,7 +2,9 @@ const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
 const User = require('../models/User');
 
-async function getBalances(groupId) {
+const getBalances = async (req, res) => {
+    const groupId = req.params.groupId;
+
     try {
         // Find all expenses associated with the specified group
         const expenses = await Expense.find({ group_id: groupId }).populate('refund_recipients');
@@ -35,10 +37,10 @@ async function getBalances(groupId) {
             });
         });
 
-        return balances;
+        res.status(200).json({ balances });
     } catch (error) {
-        throw new Error("Error calculating balance: " + error.message);
+        res.status(500).json({ message: error.message });
     }
-}
+};
 
 module.exports = { getBalances };
