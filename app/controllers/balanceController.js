@@ -21,24 +21,23 @@ const getBalances = async (req, res) => {
         // Calculate how much each user owes to others and how much others owe them
         expenses.forEach(expense => {
             // If the current user paid the expense
-            if (expense.creator_id.toString() === userId.toString()) {
+            if (expense.creator_id == userId) {
                 expense.refund_recipients.forEach(recipient => {
-                    const recipientId = recipient.recipient_id.toString();
-                    if (!balances[recipientId]) balances[recipientId] = 0;
-                    balances[recipientId] += recipient.refund_amount;
+                    if (!balances[recipient.recipient_id]) balances[recipient.recipient_id] = 0;
+                    balances[recipient.recipient_id] += recipient.refund_amount;
                 });
-            } else if (expense.refund_recipients.some(r => r.recipient_id.toString() === userId.toString())) {
+            } else if (expense.refund_recipients.some(r => r.recipient_id == userId)) {
                 // If the current user was one of the recipients of the expense
-                const recipientAmount = expense.refund_recipients.find(r => r.recipient_id.toString() === userId.toString());
+                const recipientAmount = expense.refund_recipients.find(r => r.recipient_id == userId);
                 if (recipientAmount) {
-                    if (!balances[expense.creator_id.toString()]) balances[expense.creator_id.toString()] = 0;
-                    balances[expense.creator_id.toString()] -= recipientAmount.refund_amount;
+                    if (!balances[expense.creator_id]) balances[expense.creator_id] = 0;
+                    balances[expense.creator_id] -= recipientAmount.refund_amount;
                 }
             }
         });
 
         // Calculate total spend by the current user
-        const totalSpend = expenses.filter(expense => expense.creator_id.toString() === userId.toString()).reduce((acc, expense) => acc + expense.amount, 0);
+        const totalSpend = expenses.filter(expense => expense.creator_id == userId).reduce((acc, expense) => acc + expense.amount, 0);
 
         // Calculate total owe by the current user
         const totalOwe = Object.values(balances).reduce((acc, balance) => acc + balance, 0);
