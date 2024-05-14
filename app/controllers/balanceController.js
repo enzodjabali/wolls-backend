@@ -1,6 +1,3 @@
-const Expense = require('../models/Expense');
-const GroupMembership = require("../models/GroupMembership");
-
 const getBalances = async (req, res) => {
     const groupId = req.params.groupId;
     const userId = req.userId;
@@ -21,10 +18,10 @@ const getBalances = async (req, res) => {
         // Calculate how much each user owes to others and how much others owe them
         expenses.forEach(expense => {
             // If the current user paid the expense
-            if (expense.creator_id === userId) {
+            if (expense.creator_id.toString() === userId) {
                 expense.refund_recipients.forEach(recipient => {
-                    if (recipient && recipient.recipient_id) {
-                        const recipientId = recipient.recipient_id.toString();
+                    const recipientId = recipient && recipient.recipient_id ? recipient.recipient_id.toString() : null;
+                    if (recipientId) {
                         if (!balances[recipientId]) balances[recipientId] = 0;
                         balances[recipientId] += recipient.refund_amount;
                     }
@@ -40,7 +37,7 @@ const getBalances = async (req, res) => {
         });
 
         // Calculate total spend by the current user
-        const totalSpend = expenses.filter(expense => expense.creator_id === userId).reduce((acc, expense) => acc + expense.amount, 0);
+        const totalSpend = expenses.filter(expense => expense.creator_id.toString() === userId).reduce((acc, expense) => acc + expense.amount, 0);
 
         // Calculate total owe by the current user
         const totalOwe = Object.values(balances).reduce((acc, balance) => acc + balance, 0);
