@@ -64,6 +64,7 @@ const getAllGroups = async (req, res) => {
 
 const getGroupById = async (req, res) => {
     const groupId = req.params.id; // Extract the group ID from the request parameters
+    const currentUserId = req.userId; // Extract the current user's ID from the request
 
     try {
         // Find the group by its ID
@@ -71,6 +72,13 @@ const getGroupById = async (req, res) => {
 
         if (!group) {
             return res.status(404).json({ message: "Group not found" });
+        }
+
+        // Check if the current user is a member of this group
+        const isMember = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId });
+
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not a member of this group" });
         }
 
         res.status(200).json(group); // Respond with the found group
