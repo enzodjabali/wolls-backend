@@ -25,15 +25,15 @@ const getBalances = async (req, res) => {
             const buyer = expense.creator_id;
             const receivers = expense.refund_recipients;
 
-            // Deduct expense amount from buyer's balance
-            balances[buyer] -= expense.amount;
+            // Add expense amount to buyer's balance
+            balances[buyer] += expense.amount;
 
             // Split the expense amount equally among receivers
             const splitAmount = expense.amount / receivers.length;
 
-            // Add split amount to each receiver's balance
+            // Subtract split amount from each receiver's balance
             receivers.forEach(receiver => {
-                balances[receiver._id] += splitAmount;
+                balances[receiver._id] -= splitAmount;
             });
         });
 
