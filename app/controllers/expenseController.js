@@ -57,6 +57,13 @@ const createExpense = async (req, res) => {
         const creator_id = req.userId;
         const date = Date.now(); // Set current date
 
+        // Check if the current user is a member of the group
+        const isMember = await GroupMembership.exists({ user_id: creator_id, group_id });
+
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not a member of this group" });
+        }
+
         let expenseAttachment = "";
 
         if (attachment) {
