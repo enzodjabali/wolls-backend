@@ -115,8 +115,8 @@ const getInvitations = async (req, res) => {
     }
 };
 
-const acceptInvitation = async (req, res) => {
-    const { group_id } = req.body;
+const manageInvitation = async (req, res) => {
+    const { group_id, accept_invitation } = req.body;
     const userId = req.userId;
 
     try {
@@ -128,13 +128,30 @@ const acceptInvitation = async (req, res) => {
             return res.status(404).json({ message: "L'utilisateur n'a pas d'invitation pour ce groupe" });
         }
 
-        // Update the has_accepted_invitation field to true
-        groupMembership.has_accepted_invitation = true;
+        // If accept_invitation is true, accept the invitation
+        if (accept_invitation === true) {
+            // Update the has_accepted_invitation field to true
+            groupMembership.has_accepted_invitation = true;
 
-        // Save the updated group membership
-        await groupMembership.save();
+            // Save the updated group membership
+            await groupMembership.save();
 
-        res.status(200).json({ message: "L'invitation a été acceptée avec succès" });
+            // Delete the invitation
+            await GroupMembership.findByIdAndDelete(groupMembership._id);
+
+            return res.status(200).json({ message: "L'invitation a été acceptée avec succès" });
+        }
+
+        // If accept_invitation is false, delete the invitation
+        if (accept_invitation === false) {
+            // Delete the group membership
+            await GroupMembership.findByIdAndDelete(groupMembership._id);
+
+            return res.status(200).json({ message: "L'invitation a été supprimée avec succès" });
+        }
+
+        // If accept_invitation is neither true nor false
+        return res.status(400).json({ message: "Valeur non valide pour accept_invitation" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -145,5 +162,5 @@ module.exports = {
     getGroupMembers,
     deleteGroupMembership,
     getInvitations,
-    acceptInvitation
+    manageInvitation
 };

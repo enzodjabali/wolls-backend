@@ -1087,6 +1087,10 @@
         "group_id": {
           "type": "string",
           "example": "664204574c6a5713dfe4f320"
+        },
+        "accept_invitation": {
+          "type": "boolean",
+          "example": true
         }
       }
     },
