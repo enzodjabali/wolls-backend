@@ -4,8 +4,16 @@ const Group = require('../models/Group');
 
 const createGroupMembership = async (req, res) => {
     const { user_pseudonym, group_id } = req.body;
+    const currentUserId = req.userId; // Assuming you have middleware to extract the user's ID from the request
 
     try {
+        // Check if the current user is an administrator of the group
+        const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id, is_administrator: true });
+
+        if (!isAdmin) {
+            return res.status(403).json({ message: "You are not an administrator of this group" });
+        }
+
         const user = await User.findOne({ pseudonym: user_pseudonym });
 
         if (!user) {
