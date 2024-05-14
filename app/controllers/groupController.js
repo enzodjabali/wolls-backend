@@ -89,10 +89,18 @@ const getGroupById = async (req, res) => {
 
 const updateGroupById = async (req, res) => {
     const groupId = req.params.id;
+    const currentUserId = req.userId; // Assuming you have middleware to extract the user's ID from the request
 
     try {
         // Validate the request body
         await updateGroupSchema.validateAsync(req.body);
+
+        // Check if the user is an administrator of the group
+        const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId, is_administrator: true });
+
+        if (!isAdmin) {
+            return res.status(403).json({ message: "You are not an administrator of this group" });
+        }
 
         // Find and update the group by its ID
         const updatedGroup = await Group.findByIdAndUpdate(groupId, {
@@ -110,7 +118,6 @@ const updateGroupById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 const deleteGroupById = async (req, res) => {
     const groupId = req.params.id;
