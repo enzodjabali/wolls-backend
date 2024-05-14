@@ -101,7 +101,7 @@ const googleLogin = async (req, res) => {
         const jwtToken = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
         res.status(200).json({ token: jwtToken });
     } catch (error) {
-        res.status(400).json({ error: 'Erreur lors de la connexion avec Google' });
+        res.status(400).json({ error: 'Erreur lors de la connexion avec Google' + error });
     }
 };
 
