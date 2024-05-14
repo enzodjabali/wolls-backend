@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
 
 dotenv.config();
 
@@ -16,7 +17,8 @@ const refundRoutes = require('./routes/refundRoutes');
 const balanceRoutes = require('./routes/balanceRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 
-APP.use(express.json());
+APP.use(bodyParser.json({limit: "50mb"}));
+APP.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
 
 mongoose.connect(DB_URI)
     .then((result) => console.log('Successfully connected to the database!'))

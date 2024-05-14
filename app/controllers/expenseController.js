@@ -24,7 +24,6 @@ const getExpenses = async (req, res) => {
     }
 };
 
-// Function to get a specific expense by ID
 const getExpense = async (req, res) => {
     const { groupId, expenseId } = req.params;
 
@@ -41,7 +40,35 @@ const getExpense = async (req, res) => {
             return res.status(404).json({ message: "Expense not found" });
         }
 
-        res.status(200).json(expense);
+        // Fetch attachment from S3
+        let attachmentData;
+        if (expense.attachment) {
+            try {
+                const responseStream = await minioClient.getObject("goodfriends", expense.attachment);
+                const chunks = [];
+                for await (const chunk of responseStream) {
+                    chunks.push(chunk);
+                }
+                attachmentData = Buffer.concat(chunks).toString('base64');
+            } catch (error) {
+                console.error("Error fetching attachment from S3:", error);
+            }
+        }
+
+        // Format attachment data
+        const attachment = attachmentData
+            ? {
+                data: `data:image/jpeg;base64,${attachmentData}`
+            }
+            : null;
+
+        // Include attachment in response
+        const expenseWithAttachment = {
+            ...expense.toObject(),
+            attachment: attachment
+        };
+
+        res.status(200).json(expenseWithAttachment);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
