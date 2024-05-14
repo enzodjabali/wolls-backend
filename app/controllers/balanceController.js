@@ -1,25 +1,5 @@
 const Expense = require('../models/Expense');
-const { getRefundRecipients } = require('../middlewares/refundUtils');
 const GroupMembership = require("../models/GroupMembership");
-
-const calculateBalances = (expenses) => {
-    const balances = {};
-
-    expenses.forEach((expense) => {
-        const refundRecipients = getRefundRecipients(expense);
-        const totalExpense = expense.amount;
-
-        // Subtract the total expense from the buyer's balance
-        balances[expense.creator_id.toString()] = (balances[expense.creator_id.toString()] || 0) - totalExpense;
-
-        // Calculate and distribute the expense among recipients
-        refundRecipients.forEach(recipient => {
-            balances[recipient.toString()] = (balances[recipient.toString()] || 0) + (totalExpense / refundRecipients.length);
-        });
-    });
-
-    return balances;
-};
 
 const getBalances = async (req, res) => {
     const groupId = req.params.groupId;
@@ -32,11 +12,38 @@ const getBalances = async (req, res) => {
             return res.status(403).json({ message: "You are not a member of this group" });
         }
 
+        // Retrieve expenses for the group
         const expenses = await Expense.find({ group_id: groupId });
 
-        const balances = calculateBalances(expenses);
+        // Initialize balances object
+        const balances = {};
 
-        res.status(200).json(balances);
+        // Calculate how much each user owes to others and how much others owe them
+        expenses.forEach(expense => {
+            // If the current user paid the expense
+            if (expense.creator_id === userId) {
+                expense.refund_recipients.forEach(recipient => {
+                    if (!balances[recipient]) balances[recipient] = 0;
+                    balances[recipient] += expense.refund_recipients.find(r => r.recipient_id.toString() === recipient).refund_amount;
+                });
+            } else if (expense.refund_recipients.map(r => r.recipient_id.toString()).includes(userId)) {
+                // If the current user was one of the recipients of the expense
+                if (!balances[expense.creator_id]) balances[expense.creator_id] = 0;
+                balances[expense.creator_id] -= expense.refund_recipients.find(r => r.recipient_id.toString() === userId).refund_amount;
+            }
+        });
+
+        // Calculate total spend by the current user
+        const totalSpend = expenses.filter(expense => expense.creator_id === userId).reduce((acc, expense) => acc + expense.amount, 0);
+
+        // Calculate total owe by the current user
+        const totalOwe = Object.values(balances).reduce((acc, balance) => acc + balance, 0);
+
+        // Calculate final balances
+        const finalBalances = {};
+        finalBalances[userId] = totalSpend - totalOwe;
+
+        res.status(200).json(finalBalances);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
