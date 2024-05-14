@@ -4,8 +4,16 @@ const Group = require('../models/Group');
 
 const createGroupMembership = async (req, res) => {
     const { user_pseudonym, group_id } = req.body;
+    const currentUserId = req.userId; // Assuming you have middleware to extract the user's ID from the request
 
     try {
+        // Check if the current user is an administrator of the group
+        const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id, is_administrator: true });
+
+        if (!isAdmin) {
+            return res.status(403).json({ message: "You are not an administrator of this group" });
+        }
+
         const user = await User.findOne({ pseudonym: user_pseudonym });
 
         if (!user) {
@@ -58,6 +66,7 @@ const getGroupMembers = async (req, res) => {
 
 const deleteGroupMembership = async (req, res) => {
     const { groupId, userId } = req.params;
+    const currentUserId = req.userId;
 
     try {
         const group = await Group.findById(groupId);
@@ -70,6 +79,13 @@ const deleteGroupMembership = async (req, res) => {
 
         if (!membership) {
             return res.status(404).json({ message: "L'utilisateur n'est pas membre du groupe" });
+        }
+
+        // Check if the current user is an administrator of the group
+        const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId, is_administrator: true });
+
+        if (!isAdmin) {
+            return res.status(403).json({ message: "Vous n'êtes pas autorisé à supprimer des membres du groupe" });
         }
 
         await GroupMembership.findByIdAndDelete(membership._id);

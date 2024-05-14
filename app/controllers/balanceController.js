@@ -1,5 +1,6 @@
 const Expense = require('../models/Expense');
 const { getRefundRecipients } = require('../middlewares/refundUtils');
+const GroupMembership = require("../models/GroupMembership");
 
 // Function to calculate balances based on expenses
 const calculateBalances = (expenses) => {
@@ -24,8 +25,16 @@ const calculateBalances = (expenses) => {
 // Function to get balances for a specific group
 const getBalances = async (req, res) => {
     const groupId = req.params.groupId; // Extract group ID from request parameters
+    const userId = req.userId; // Extract user ID from request
 
     try {
+        // Check if the current user is a member of the group
+        const isMember = await GroupMembership.exists({ user_id: userId, group_id: groupId });
+
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not a member of this group" });
+        }
+
         // Retrieve expenses for the group
         const expenses = await Expense.find({ group_id: groupId });
 
