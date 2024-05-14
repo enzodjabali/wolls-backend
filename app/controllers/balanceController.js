@@ -22,7 +22,6 @@ const calculateBalances = (expenses) => {
     return balances;
 };
 
-// Function to get balances for a specific group
 const getBalances = async (req, res) => {
     const groupId = req.params.groupId; // Extract group ID from request parameters
     const userId = req.userId; // Extract user ID from request
@@ -38,10 +37,23 @@ const getBalances = async (req, res) => {
         // Retrieve expenses for the group
         const expenses = await Expense.find({ group_id: groupId });
 
-        // Calculate balances based on expenses
-        const balances = calculateBalances(expenses);
+        // Initialize balances object
+        const balances = {};
 
-        res.status(200).json(balances); // Respond with the calculated balances
+        // Calculate how much each user owes to others and how much others owe them
+        expenses.forEach(expense => {
+            // If the current user paid the expense
+            if (expense.creator_id === userId) {
+                expense.refund_recipients.forEach(recipient => {
+                    balances[recipient] = (balances[recipient] || 0) - (expense.amount / expense.refund_recipients.length);
+                });
+            } else if (expense.refund_recipients.includes(userId)) {
+                // If the current user was one of the recipients of the expense
+                balances[expense.creator_id] = (balances[expense.creator_id] || 0) + (expense.amount / expense.refund_recipients.length);
+            }
+        });
+
+        res.status(200).json(balances);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
