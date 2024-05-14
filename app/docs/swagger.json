@@ -720,7 +720,7 @@
         }
       }
     },
-    "/v1/refunds/{groupId}": {
+    "/v1/refunds/{groupId}?simplified=true": {
       "get": {
         "tags": ["Refunds"],
         "description": "Get refunds for a specific group",
