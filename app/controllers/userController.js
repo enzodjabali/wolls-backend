@@ -2,6 +2,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { createUserSchema, updateUserSchema } = require('../middlewares/validationSchema');
+const { OAuth2Client } = require('google-auth-library');
 
 const registerUser = async (req, res) => {
     try {
@@ -70,6 +71,37 @@ const authenticateUser = async (req, res) => {
         res.status(200).json({ token });
     } catch (error) {
         res.status(500).json({ error: 'Erreur lors de la connexion. Veuillez réessayer.' });
+    }
+};
+
+const googleLogin = async (req, res) => {
+    const client = new OAuth2Client('620356302637-dkptlf3ite985l1i80c4t2i11pkfb3gs.apps.googleusercontent.com');
+    const { token } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: 'YOUR_GOOGLE_CLIENT_ID',
+        });
+        const { name, email, picture } = ticket.getPayload();
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = new User({
+                name,
+                email,
+                picture,
+                pseudonym: name, // Or some other logic to create a pseudonym
+                password: '', // Password is not needed for Google login
+            });
+            await user.save();
+        }
+
+        const jwtToken = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
+        res.status(200).json({ token: jwtToken });
+    } catch (error) {
+        res.status(400).json({ error: 'Erreur lors de la connexion avec Google' });
     }
 };
 
@@ -189,4 +221,4 @@ const getUserById = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById };
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById, googleLogin };
