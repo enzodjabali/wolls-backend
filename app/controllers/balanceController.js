@@ -10,11 +10,11 @@ const calculateBalances = (expenses) => {
         const totalExpense = expense.amount;
 
         // Subtract the total expense from the buyer's balance
-        balances[expense.creator_id] = (balances[expense.creator_id] || 0) - totalExpense;
+        balances[expense.creator_id.toString()] = (balances[expense.creator_id.toString()] || 0) - totalExpense;
 
         // Calculate and distribute the expense among recipients
         refundRecipients.forEach(recipient => {
-            balances[recipient] = (balances[recipient] || 0) + (totalExpense / refundRecipients.length);
+            balances[recipient.toString()] = (balances[recipient.toString()] || 0) + (totalExpense / refundRecipients.length);
         });
     });
 
