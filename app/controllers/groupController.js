@@ -121,13 +121,25 @@ const updateGroupById = async (req, res) => {
 
 const deleteGroupById = async (req, res) => {
     const groupId = req.params.id;
+    const userId = req.userId; // Assuming user is authenticated
 
     try {
-        const deletedGroup = await Group.findByIdAndDelete(groupId);
+        // Find the group
+        const group = await Group.findById(groupId);
 
-        if (!deletedGroup) {
+        if (!group) {
             return res.status(404).json({ message: 'Group not found' });
         }
+
+        // Check if the current user is an administrator of the group
+        const isAdministrator = await GroupMembership.exists({ user_id: userId, group_id: groupId, is_administrator: true });
+
+        if (!isAdministrator) {
+            return res.status(403).json({ message: 'You are not authorized to delete this group' });
+        }
+
+        // Delete the group
+        const deletedGroup = await Group.findByIdAndDelete(groupId);
 
         res.status(200).json(deletedGroup);
     } catch (error) {
