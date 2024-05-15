@@ -1,6 +1,7 @@
 const GroupMembership = require('../models/GroupMembership');
 const User = require('../models/User');
 const Group = require('../models/Group');
+const LOCALE = require('../locales/fr-FR');
 
 const createGroupMembership = async (req, res) => {
     const { user_pseudonym, group_id } = req.body;
@@ -11,19 +12,19 @@ const createGroupMembership = async (req, res) => {
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id, is_administrator: true });
 
         if (!isAdmin) {
-            return res.status(403).json({ message: "You are not an administrator of this group" });
+            return res.status(403).json({ error: LOCALE.notGroupAdmin });
         }
 
         const user = await User.findOne({ pseudonym: user_pseudonym });
 
         if (!user) {
-            return res.status(404).json({ message: "Utilisateur introuvable" });
+            return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
         const existingMembership = await GroupMembership.findOne({ user_id: user._id, group_id });
 
         if (existingMembership) {
-            return res.status(400).json({ message: "L'utilisateur est déjà membre du groupe" });
+            return res.status(400).json({ error: LOCALE.userAlreadyMemberOfGroup });
         }
 
         const newMembership = new GroupMembership({
@@ -35,7 +36,7 @@ const createGroupMembership = async (req, res) => {
 
         res.status(201).json(savedMembership);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -46,7 +47,7 @@ const getGroupMembers = async (req, res) => {
         const group = await Group.findById(groupId);
 
         if (!group) {
-            return res.status(404).json({ message: "Groupe introuvable" });
+            return res.status(404).json({ error: LOCALE.groupNotFound });
         }
 
         const groupMemberships = await GroupMembership.find({ group_id: groupId });
@@ -60,7 +61,7 @@ const getGroupMembers = async (req, res) => {
 
         res.status(200).json(groupMembers);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -72,27 +73,27 @@ const deleteGroupMembership = async (req, res) => {
         const group = await Group.findById(groupId);
 
         if (!group) {
-            return res.status(404).json({ message: "Groupe introuvable" });
+            return res.status(404).json({ error: LOCALE.groupNotFound });
         }
 
         const membership = await GroupMembership.findOne({ user_id: userId, group_id: groupId });
 
         if (!membership) {
-            return res.status(404).json({ message: "L'utilisateur n'est pas membre du groupe" });
+            return res.status(404).json({ error: LOCALE.notGroupMember });
         }
 
         // Check if the current user is an administrator of the group
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId, is_administrator: true });
 
         if (!isAdmin) {
-            return res.status(403).json({ message: "Vous n'êtes pas autorisé à supprimer des membres du groupe" });
+            return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroupMembers });
         }
 
         await GroupMembership.findByIdAndDelete(membership._id);
 
-        res.status(200).json({ message: "L'utilisateur a été supprimé du groupe avec succès" });
+        res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -111,7 +112,7 @@ const getInvitations = async (req, res) => {
 
         res.status(200).json(groups);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -125,7 +126,7 @@ const manageInvitation = async (req, res) => {
 
         // Check if the group membership exists
         if (!groupMembership) {
-            return res.status(404).json({ message: "L'utilisateur n'a pas d'invitation pour ce groupe" });
+            return res.status(404).json({ error: LOCALE.userHasNoInvitationForGroup });
         }
 
         // If accept_invitation is true, accept the invitation
@@ -136,7 +137,7 @@ const manageInvitation = async (req, res) => {
             // Save the updated group membership
             await groupMembership.save();
 
-            return res.status(200).json({ message: "L'invitation a été acceptée avec succès" });
+            return res.status(200).json({ message: LOCALE.invitationAccepted });
         }
 
         // If accept_invitation is false, delete the invitation
@@ -144,13 +145,13 @@ const manageInvitation = async (req, res) => {
             // Delete the group membership
             await GroupMembership.findByIdAndDelete(groupMembership._id);
 
-            return res.status(200).json({ message: "L'invitation a été supprimée avec succès" });
+            return res.status(200).json({ message: LOCALE.invitationDeleted });
         }
 
         // If accept_invitation is neither true nor false
-        return res.status(400).json({ message: "Valeur non valide pour accept_invitation" });
+        return res.status(400).json({ error: LOCALE.invalidInvitationValue });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 

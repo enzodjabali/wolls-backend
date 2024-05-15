@@ -1,6 +1,7 @@
 const Message = require('../models/Message');
 const GroupMembership = require('../models/GroupMembership');
 const { sendMessageSchema } = require('../middlewares/validationSchema');
+const LOCALE = require('../locales/fr-FR');
 
 const sendPrivateMessage = async (req, res) => {
     try {
@@ -19,10 +20,10 @@ const sendPrivateMessage = async (req, res) => {
             const savedMessage = await newMessage.save();
             res.status(201).json(savedMessage);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({ error: LOCALE.internalServerError });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -37,7 +38,7 @@ const sendGroupMessage = async (req, res) => {
         const isMember = await GroupMembership.exists({ user_id: senderId, group_id: groupId });
 
         if (!isMember) {
-            return res.status(403).json({ message: "You are not a member of this group" });
+            return res.status(403).json({ error: LOCALE.notGroupMember });
         }
 
         try {
@@ -50,10 +51,10 @@ const sendGroupMessage = async (req, res) => {
             const savedMessage = await newMessage.save();
             res.status(201).json(savedMessage);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({ error: LOCALE.internalServerError });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -71,7 +72,7 @@ const getPrivateMessages = async (req, res) => {
 
         res.status(200).json(messages);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -83,14 +84,14 @@ const getGroupMessages = async (req, res) => {
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
 
         if (!membership || !membership.has_accepted_invitation) {
-            return res.status(403).json({ message: "You do not have permission to view the messages of this group" });
+            return res.status(403).json({ error: LOCALE.notAllowedViewGroupMessages });
         }
 
         const messages = await Message.find({ groupId });
 
         res.status(200).json(messages);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 

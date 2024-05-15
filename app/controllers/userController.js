@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { createUserSchema, updateUserSchema } = require('../middlewares/validationSchema');
 const sendEmail = require('../middlewares/sendEmail');
+const LOCALE = require('../locales/fr-FR');
 
 const registerUser = async (req, res) => {
     try {
@@ -14,7 +15,7 @@ const registerUser = async (req, res) => {
 
         // Check if passwords match
         if (password !== confirmPassword) {
-            return res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
+            return res.status(400).json({ error: LOCALE.passwordsNotMatching });
         }
 
         // Hash the password
@@ -23,12 +24,12 @@ const registerUser = async (req, res) => {
         // Check if email and pseudonym are unique
         const emailExists = await User.findOne({ email });
         if (emailExists) {
-            return res.status(400).json({ error: "L'email existe déjà" });
+            return res.status(400).json({ error: LOCALE.emailAlreadyExists });
         }
 
         const pseudonymExists = await User.findOne({ pseudonym });
         if (pseudonymExists) {
-            return res.status(400).json({ error: "Le pseudo existe déjà" });
+            return res.status(400).json({ error: LOCALE.pseudonymAlreadyExists });
         }
 
         // Create new user instance
@@ -45,7 +46,7 @@ const registerUser = async (req, res) => {
 
         res.status(201).json(savedUser);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -57,21 +58,21 @@ const authenticateUser = async (req, res) => {
         const user = await User.findOne({ pseudonym });
 
         if (!user) {
-            return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
+            return res.status(401).json({ error: LOCALE.wrongPasswordOrPseudonym });
         }
 
         // Compare the password
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
-            return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
+            return res.status(401).json({ error: LOCALE.wrongPasswordOrPseudonym });
         }
 
         // Create and send a JWT token
         const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
         res.status(200).json({ token });
     } catch (error) {
-        res.status(500).json({ error: 'Erreur lors de la connexion. Veuillez réessayer.' });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -119,7 +120,7 @@ const authenticateUserWithGoogle = async (req, res) => {
         res.status(200).json({ token });
     } catch (error) {
         console.error('Error authenticating with Google:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -130,7 +131,7 @@ const getUsersList = async (req, res) => {
         })
         .catch(err => {
             console.log(err);
-            res.status(500).json({ error: 'Internal Server Error' })
+            res.status(500).json({ error: LOCALE.internalServerError })
         });
 };
 
@@ -139,7 +140,7 @@ const getCurrentUser = async (req, res) => {
         const currentUser = await User.findOne({ _id: req.userId }, { _id: 1, firstname: 1, lastname: 1, pseudonym: 1, email: 1 });
         res.status(200).json(currentUser);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -163,12 +164,12 @@ const updateCurrentUser = async (req, res) => {
 
         // Checks if user was found and updated
         if (result) {
-            res.status(200).send('Votre compte a été mis à jour');
+            res.status(200).send({ message: LOCALE.accountSuccessfullyUpdated });
         } else {
-            res.status(404).json({ error: 'Utilisateur introuvable' });
+            res.status(404).json({ error: LOCALE.userNotFound });
         }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -182,12 +183,12 @@ const updatePasswordCurrentUser = async (req, res) => {
         // Checks if the current password matches the one saved in the database
         const isPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
         if (!isPasswordValid) {
-            return res.status(400).json({ error: 'Mot de passe actuel incorrect' });
+            return res.status(400).json({ error: LOCALE.wrongCurrentPassword });
         }
 
         // Validate the new password and confirm password
         if (newPassword !== confirmPassword) {
-            return res.status(400).json({ error: 'Les nouveaux mots de passe ne correspondent pas' });
+            return res.status(400).json({ error: LOCALE.passwordsNotMatching });
         }
 
         // Hash the new password
@@ -196,28 +197,28 @@ const updatePasswordCurrentUser = async (req, res) => {
         // Update the user's password
         await User.findByIdAndUpdate(req.userId, { password: hashedPassword });
 
-        res.status(200).send('Votre mot de passe a été mis à jour avec succès');
+        res.status(200).send({ message: LOCALE.passwordSuccessfullyUpdated });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
 const logoutUser = (req, res) => {
     try {
         res.clearCookie('jwt');
-        res.status(200).json({ message: 'Vous êtes désormais déconnecté' });
+        res.status(200).json({ message: LOCALE.nowDisconnected });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
 const deleteCurrentUser = (req, res) => {
     User.findByIdAndDelete({_id: req.userId})
         .then(result => {
-            res.send('Votre compte a bien été supprimé');
+            res.send({ message: LOCALE.accountSuccessfullyDeleted });
         })
-        .catch(err => {
-            console.log(err);
+        .catch(error => {
+            res.status(500).json({ error: LOCALE.internalServerError });
         });
 };
 
@@ -229,13 +230,13 @@ const getUserById = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
         // Return only the pseudonym field
         res.status(200).json({ pseudonym: user.pseudonym });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -255,7 +256,7 @@ const forgotPassword = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
         // Generate a random verification code (you can use any method you prefer)
@@ -276,11 +277,11 @@ const forgotPassword = async (req, res) => {
         if (emailSent) {
             return res.status(200).json({ message: "Verification code sent successfully. Don't forget to check your junks" });
         } else {
-            return res.status(500).json({ message: "Failed to send verification code" });
+            return res.status(500).json({ error: "Failed to send verification code" });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -292,26 +293,26 @@ const resetPassword = async (req, res) => {
         const forgotPasswordEntry = await ForgotPassword.findOne({ email, code });
 
         if (!forgotPasswordEntry) {
-            return res.status(404).json({ message: 'Invalid verification code or email' });
+            return res.status(404).json({ error: LOCALE.invalidVerificationCodeOrEmail });
         }
 
         // Check if the forgot password code is expired (created more than 10 minutes ago)
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
         if (forgotPasswordEntry.createdAt < tenMinutesAgo) {
             // Code is expired
-            return res.status(400).json({ message: 'Forgot password code has expired' });
+            return res.status(400).json({ error: LOCALE.resetCodeExpired });
         }
 
         // Check if the new password and confirm new password match
         if (newPassword !== confirmNewPassword) {
-            return res.status(400).json({ message: 'New password and confirm password do not match' });
+            return res.status(400).json({ error: LOCALE.passwordsNotMatching });
         }
 
         // Find the user by email
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
         // Hash the new password
@@ -324,10 +325,10 @@ const resetPassword = async (req, res) => {
         // Delete the entry from the ForgotPassword model
         await ForgotPassword.findOneAndDelete({ email, code });
 
-        res.status(200).json({ message: 'Password reset successfully' });
+        res.status(200).json({ message: LOCALE.passwordSuccessfullyUpdated });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 

@@ -5,6 +5,7 @@ const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/val
 const fs = require('filestream');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid'); // Import uuidv4 function
+const LOCALE = require('../locales/fr-FR');
 
 // Function to get all expenses for a specific group
 const getExpenses = async (req, res) => {
@@ -15,7 +16,7 @@ const getExpenses = async (req, res) => {
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
 
         if (!membership || !membership.has_accepted_invitation) {
-            return res.status(403).json({ message: "You do not have permission to view expenses for this group" });
+            return res.status(403).json({ error: LOCALE.notAllowedToViewGroupExpenses });
         }
 
         // Find all expenses associated with the specified group
@@ -23,7 +24,7 @@ const getExpenses = async (req, res) => {
 
         res.status(200).json(expenses); // Respond with the expenses
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -34,13 +35,13 @@ const getExpense = async (req, res) => {
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
 
         if (!membership || !membership.has_accepted_invitation) {
-            return res.status(403).json({ message: "You do not have permission to view this expense" });
+            return res.status(403).json({ error: LOCALE.notAllowedToViewExpenseDetails });
         }
 
         const expense = await Expense.findOne({ _id: expenseId, group_id: groupId });
 
         if (!expense) {
-            return res.status(404).json({ message: "Expense not found" });
+            return res.status(404).json({ error: LOCALE.expenseNotFound });
         }
 
         const bucketName = 'goodfriends';
@@ -75,10 +76,10 @@ const getExpense = async (req, res) => {
         });
 
         dataStream.on('error', function (err) {
-            res.status(500).json({ message: "Error fetching attachment data" });
+            res.status(500).json({ error: LOCALE.internalServerError });
         });
     } catch (error) {
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -96,7 +97,7 @@ const createExpense = async (req, res) => {
         const isMember = await GroupMembership.exists({ user_id: creator_id, group_id });
 
         if (!isMember) {
-            return res.status(403).json({ message: "You are not a member of this group" });
+            return res.status(403).json({ error: LOCALE.notGroupMember });
         }
 
         let fileName = null; // Initialize fileName as null
@@ -134,9 +135,9 @@ const createExpense = async (req, res) => {
     } catch (error) {
         // Handle validation errors
         if (error.isJoi) {
-            return res.status(400).json({ message: error.details[0].message });
+            return res.status(400).json({ error: error.details[0].message });
         } else {
-            return res.status(500).json({ message: error.message });
+            return res.status(500).json({ error: LOCALE.internalServerError });
         }
     }
 };
@@ -153,12 +154,12 @@ const updateExpense = async (req, res) => {
         let expense = await Expense.findById(expenseId);
 
         if (!expense) {
-            return res.status(404).json({ message: "Expense not found" });
+            return res.status(404).json({ error: LOCALE.expenseNotFound });
         }
 
         // Check if the current user is the creator of the expense
         if (expense.creator_id != req.userId) {
-            return res.status(403).json({ message: "You do not have permission to edit this expense" });
+            return res.status(403).json({ error: LOCALE.notAllowedToEditExpense });
         }
 
         // Update expense data
@@ -176,9 +177,9 @@ const updateExpense = async (req, res) => {
     } catch (error) {
         // Handle validation errors
         if (error.isJoi) {
-            res.status(400).json({ message: error.details[0].message });
+            res.status(400).json({ error: error.details[0].message });
         } else {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({ error: LOCALE.internalServerError });
         }
     }
 };
@@ -192,21 +193,21 @@ const deleteExpense = async (req, res) => {
         let expense = await Expense.findById(expenseId);
 
         if (!expense) {
-            return res.status(404).json({ message: "Expense not found" });
+            return res.status(404).json({ error: LOCALE.expenseNotFound });
         }
 
         // Check if the current user is the creator of the expense
         if (expense.creator_id != req.userId) {
-            return res.status(403).json({ message: "You do not have permission to delete this expense" });
+            return res.status(403).json({ error: LOCALE.notAllowedToRemoveExpense });
         }
 
         // Delete expense
         await Expense.findByIdAndDelete(expenseId);
 
         // Respond with success message
-        res.status(200).json({ message: "Expense deleted successfully" });
+        res.status(200).json({ message: LOCALE.expenseSuccessfullyDeleted });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: LOCALE.internalServerError });
     }
 };
 

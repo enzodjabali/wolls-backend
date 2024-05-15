@@ -1,6 +1,7 @@
 const Expense = require('../models/Expense');
 const { getRefundRecipients } = require('../middlewares/refundUtils');
 const GroupMembership = require("../models/GroupMembership");
+const LOCALE = require('../locales/fr-FR');
 
 // Function to calculate refunds based on expenses
 const calculateRefunds = (expenses) => {
@@ -75,7 +76,7 @@ const getRefunds = async (req, res) => {
         const isMember = await GroupMembership.exists({ user_id: userId, group_id: groupId });
 
         if (!isMember) {
-            return res.status(403).json({ message: "You are not a member of this group" });
+            return res.status(403).json({ error: LOCALE.notGroupMember });
         }
 
         // Retrieve expenses for the group
@@ -92,7 +93,7 @@ const getRefunds = async (req, res) => {
 
         res.status(200).json(refunds); // Respond with the calculated refunds
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 

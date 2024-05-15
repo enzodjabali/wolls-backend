@@ -1,51 +1,75 @@
 const Joi = require('@hapi/joi');
+const LOCALE = require('../locales/fr-FR');
 
 //////////////////////////////////////////////////////////////////////
 //                             User                                 //
 //////////////////////////////////////////////////////////////////////
 
 const createUserSchema = Joi.object({
-    firstname: Joi.string().min(2).max(30).required().messages({
-        'string.empty': 'Le prénom est requis',
-        'string.min': 'Le prénom doit avoir au moins 2 caractères',
-        'string.max': 'Le prénom ne peut pas dépasser 2 caractères',
-        'any.required': 'Le prénom est requis',
+    firstname: Joi.string().min(2).max(15).required().messages({
+        'string.empty': LOCALE.firstNameRequired,
+        'string.min': LOCALE.firstNameTooShort,
+        'string.max': LOCALE.firstNameTooLong,
+        'any.required': LOCALE.firstNameRequired,
     }),
-    lastname: Joi.string().min(2).max(30).required().messages({
-        'string.empty': 'Le nom est requis',
-        'string.min': 'Le nom doit avoir au moins 2 caractères',
-        'string.max': 'Le nom ne peut pas dépasser 2 caractères',
-        'any.required': 'Le nom est requis',
+    lastname: Joi.string().min(2).max(15).required().messages({
+        'string.empty': LOCALE.lastNameRequired,
+        'string.min': LOCALE.lastNameTooShort,
+        'string.max': LOCALE.lastNameTooLong,
+        'any.required': LOCALE.lastNameRequired,
     }),
-    pseudonym: Joi.string().min(2).max(30).required().messages({
-        'string.empty': 'Le pseudo est requis',
-        'string.min': 'Le pseudo doit avoir au moins 2 caractères',
-        'string.max': 'Le pseudo ne peut pas dépasser 2 caractères',
-        'any.required': 'Le pseudo est requis',
+    pseudonym: Joi.string().min(2).max(15).required().messages({
+        'string.empty': LOCALE.pseudonymRequired,
+        'string.min': LOCALE.pseudonymTooShort,
+        'string.max': LOCALE.pseudonymTooLong,
+        'any.required': LOCALE.pseudonymRequired,
     }),
     email: Joi.string().email().lowercase().required().messages({
-        'string.empty': 'L\'email est requis',
-        'string.email': 'L\'email doit être valide',
-        'any.required': 'L\'email est requis',
+        'string.empty': LOCALE.emailRequired,
+        'string.email': LOCALE.invalidEmail,
+        'any.required': LOCALE.emailRequired,
     }),
-    password: Joi.string().min(4).required().messages({
-        'string.empty': 'Le mot de passe est requis',
-        'string.min': 'Le mot de passe doit avoir au moins 4 caractères',
-        'any.required': 'Le mot de passe est requis',
+    password: Joi.string().min(8).required().messages({
+        'string.empty': LOCALE.passwordRequired,
+        'string.min': LOCALE.passwordTooShort,
+        'any.required': LOCALE.passwordTooLong,
     }),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
-        'any.only': 'Les mots de passe ne correspondent pas',
-        'any.required': 'La confirmation du mot de passe est requise',
+    confirmPassword: Joi.string().min(8).valid(Joi.ref('password')).required().messages({
+        'string.min': LOCALE.passwordTooShort,
+        'any.only': LOCALE.passwordsNotMatching,
+        'any.required': LOCALE.passwordRequired,
     }),
 });
 
 const updateUserSchema = Joi.object({
-    firstname: Joi.string().min(2).max(30),
-    lastname: Joi.string().min(2).max(30),
-    pseudonym: Joi.string().min(2).max(30),
-    email: Joi.string().email().lowercase(),
-    password: Joi.string().min(2),
-    confirmPassword: Joi.string().min(2),
+    firstname: Joi.string().min(2).max(15).messages({
+        'string.empty': LOCALE.firstNameRequired,
+        'string.min': LOCALE.firstNameTooShort,
+        'string.max': LOCALE.firstNameTooLong,
+    }),
+    lastname: Joi.string().min(2).max(15).messages({
+        'string.empty': LOCALE.lastNameRequired,
+        'string.min': LOCALE.lastNameTooShort,
+        'string.max': LOCALE.lastNameTooLong,
+    }),
+    pseudonym: Joi.string().min(2).max(15).messages({
+        'string.empty': LOCALE.pseudonymRequired,
+        'string.min': LOCALE.pseudonymTooShort,
+        'string.max': LOCALE.pseudonymTooLong,
+    }),
+    email: Joi.string().email().lowercase().messages({
+        'string.empty': LOCALE.emailRequired,
+        'string.email': LOCALE.invalidEmail,
+    }),
+    password: Joi.string().min(8).messages({
+        'string.empty': LOCALE.passwordRequired,
+        'string.min': LOCALE.passwordTooShort,
+    }),
+    confirmPassword: Joi.string().min(8).messages({
+        'string.empty': LOCALE.passwordRequired,
+        'string.min': LOCALE.passwordTooShort,
+        'any.only': LOCALE.passwordsNotMatching,
+    }),
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -53,13 +77,30 @@ const updateUserSchema = Joi.object({
 //////////////////////////////////////////////////////////////////////
 
 const createGroupSchema = Joi.object({
-    name: Joi.string().min(2).max(30).required(),
-    description: Joi.string().min(2).max(100)
+    name: Joi.string().min(2).max(15).required().messages({
+        'string.empty': LOCALE.groupNameRequired,
+        'string.min': LOCALE.groupNameTooShort,
+        'string.max': LOCALE.groupNameTooLong,
+        'any.required': LOCALE.groupNameRequired,
+    }),
+    description: Joi.string().min(2).max(30).messages({
+        'string.empty': LOCALE.groupDescriptionRequired,
+        'string.min': LOCALE.groupDescriptionTooShort,
+        'string.max': LOCALE.groupDescriptionTooLong,
+    }),
 });
 
 const updateGroupSchema = Joi.object({
-    name: Joi.string().min(2).max(30),
-    description: Joi.string().min(2).max(100)
+    name: Joi.string().min(2).max(15).messages({
+        'string.empty': LOCALE.groupNameRequired,
+        'string.min': LOCALE.groupNameTooShort,
+        'string.max': LOCALE.groupNameTooLong,
+    }),
+    description: Joi.string().min(2).max(30).messages({
+        'string.empty': LOCALE.groupDescriptionRequired,
+        'string.min': LOCALE.groupDescriptionTooShort,
+        'string.max': LOCALE.groupDescriptionTooLong,
+    }),
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -67,18 +108,44 @@ const updateGroupSchema = Joi.object({
 //////////////////////////////////////////////////////////////////////
 
 const createExpenseSchema = Joi.object({
-    title: Joi.string().min(2).max(100).required(),
-    amount: Joi.number().min(0).required(),
-    group_id: Joi.string().required(),
-    category: Joi.string().min(2).max(30),
-    refund_recipients: Joi.array().items(Joi.string()).required(),
+    title: Joi.string().min(2).max(15).required().messages({
+        'string.empty': LOCALE.expenseTitleRequired,
+        'string.min': LOCALE.expenseTitleTooShort,
+        'string.max': LOCALE.expenseTitleTooLong,
+        'any.required': LOCALE.expenseTitleRequired,
+    }),
+    amount: Joi.number().min(0).required().messages({
+        'number.min': LOCALE.expenseAmountTooLow,
+        'any.required': LOCALE.expenseAmountRequired,
+    }),
+    group_id: Joi.string().required().messages({
+        'any.required': LOCALE.expenseGroupIdRequired,
+    }),
+    category: Joi.string().min(2).max(15).messages({
+        'string.empty': LOCALE.expenseCategoryNotEmpty,
+        'string.min': LOCALE.expenseCategoryTooShort,
+        'string.max': LOCALE.expenseCategoryTooLong,
+    }),
+    refund_recipients: Joi.array().items(Joi.string()).required().messages({
+        'any.required': LOCALE.expenseRefundRecipientsRequired,
+    }),
     attachment: Joi.any()
 });
 
 const updateExpenseSchema = Joi.object({
-    title: Joi.string().min(2).max(100),
-    amount: Joi.number().min(0),
-    category: Joi.string().min(2).max(30),
+    title: Joi.string().min(2).max(15).messages({
+        'string.empty': LOCALE.expenseTitleRequired,
+        'string.min': LOCALE.expenseTitleTooShort,
+        'string.max': LOCALE.expenseTitleTooLong,
+    }),
+    amount: Joi.number().min(0).messages({
+        'number.min': LOCALE.expenseAmountTooLow,
+    }),
+    category: Joi.string().min(2).max(15).messages({
+        'string.empty': LOCALE.expenseCategoryNotEmpty,
+        'string.min': LOCALE.expenseCategoryTooShort,
+        'string.max': LOCALE.expenseCategoryTooLong,
+    }),
     refund_recipients: Joi.array().items(Joi.string()),
     attachment: Joi.any()
 });
@@ -89,27 +156,17 @@ const updateExpenseSchema = Joi.object({
 
 const sendMessageSchema = Joi.object({
     recipientId: Joi.string().messages({
-        'any.required': 'L\'identifiant du destinataire est requis',
+        'any.required': LOCALE.recipientIdRequired,
     }),
     groupId: Joi.string().messages({
-        'any.required': 'L\'identifiant du groupe est requis',
+        'any.required': LOCALE.groupIdRequired,
     }),
-    message: Joi.string().required().messages({
-        'string.empty': 'Le message ne peut pas être vide',
-        'any.required': 'Le message est requis',
+    message: Joi.string().min(1).max(30).required().messages({
+        'string.empty': LOCALE.messageNotEmpty,
+        'string.min': LOCALE.messageTooShort,
+        'string.max': LOCALE.messageTooLong,
+        'any.required': LOCALE.messageRequired,
     }),
-});
-
-//////////////////////////////////////////////////////////////////////
-//                             Test                                 //
-//////////////////////////////////////////////////////////////////////
-
-const createTestSchema = Joi.object({
-    name: Joi.string().min(2).max(30).required(),
-});
-
-const updateTestSchema = Joi.object({
-    name: Joi.string().min(2).max(30),
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -128,7 +185,4 @@ module.exports = {
     updateExpenseSchema,
     // Messages
     sendMessageSchema,
-    // Test
-    createTestSchema,
-    updateTestSchema,
 };
