@@ -76,34 +76,51 @@ const authenticateUser = async (req, res) => {
     }
 };
 
-const googleLogin = async (req, res) => {
-    const client = new OAuth2Client('620356302637-dkptlf3ite985l1i80c4t2i11pkfb3gs.apps.googleusercontent.com');
-    const { token } = req.body;
-
+const authenticateUserWithGoogle = async (req, res) => {
     try {
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: 'YOUR_GOOGLE_CLIENT_ID',
-        });
-        const { name, email, picture } = ticket.getPayload();
+        const { googleToken } = req.body;
 
+        // Split the token by '.'
+        const tokenParts = googleToken.split('.');
+
+        // Decode the payload part which is the second part of the token
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf-8'));
+
+        // Extract the required information
+        const { email, given_name, family_name } = payload;
+
+        // Check if the user already exists in the database
         let user = await User.findOne({ email });
 
+        // If user doesn't exist, create a new user
         if (!user) {
-            user = new User({
-                name,
-                email,
-                picture,
-                pseudonym: name, // Or some other logic to create a pseudonym
-                password: '', // Password is not needed for Google login
+            const newUser = new User({
+                firstname: given_name,
+                lastname: family_name,
+                pseudonym: given_name, // You may adjust this logic if needed
+                email: email,
+                password: '', // Password not needed for Google login
+                isGoogle: true
             });
-            await user.save();
+            user = await newUser.save();
+        } else {
+            // Update user's information if necessary
+            if (given_name !== user.firstname || family_name !== user.lastname) {
+                user.firstname = given_name;
+                user.lastname = family_name;
+                user.pseudonym = given_name; // You may adjust this logic if needed
+                await user.save();
+            }
         }
 
-        const jwtToken = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
-        res.status(200).json({ token: jwtToken });
+        // Create JWT token
+        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
+
+        // Return the JWT token
+        res.status(200).json({ token });
     } catch (error) {
-        res.status(400).json({ error: 'Erreur lors de la connexion avec Google' + error });
+        console.error('Error authenticating with Google:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 
@@ -315,4 +332,4 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById, googleLogin, forgotPassword, resetPassword };
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById, authenticateUserWithGoogle, forgotPassword, resetPassword };
