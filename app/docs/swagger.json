@@ -414,6 +414,32 @@
         }
       }
     },
+    "/v1/users/login/google": {
+      "post": {
+        "tags": ["Users"],
+        "description": "Authenticate user with a google token",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UserLoginWithGoogleRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/v1/users": {
       "get": {
         "tags": ["Users"],
@@ -1081,6 +1107,15 @@
         "password": {
           "type": "string",
           "example": "newpassword123"
+        }
+      }
+    },
+    "UserLoginWithGoogleRequestBody": {
+      "type": "object",
+      "properties": {
+        "googleToken": {
+          "type": "string",
+          "example": "eyJhbGciOiJSUz...AFzEQTG3O-w"
         }
       }
     },

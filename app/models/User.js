@@ -4,14 +4,15 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
     firstname: {
         type: String,
-        required: true
+        required: false
     },
     lastname: {
         type: String,
-        required: true
+        required: false
     },
     pseudonym: {
-        type: String
+        type: String,
+        required: true
     },
     email: {
         type: String,
@@ -20,7 +21,11 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true
+        required: false
+    },
+    isGoogle: {
+        type: Boolean,
+        default: false
     }
 });
 
