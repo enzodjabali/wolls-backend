@@ -2,6 +2,9 @@ const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
 const minioClient = require('../middlewares/minioClient');
 const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/validationSchema');
+const fs = require('filestream');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid'); // Import uuidv4 function
 
 // Function to get all expenses for a specific group
 const getExpenses = async (req, res) => {
@@ -16,7 +19,7 @@ const getExpenses = async (req, res) => {
         }
 
         // Find all expenses associated with the specified group
-        const expenses = await Expense.find({ group_id: groupId });
+        const expenses = await Expense.find({ group_id: groupId }).select('-attachment'); // Exclude the 'attachment' field
 
         res.status(200).json(expenses); // Respond with the expenses
     } catch (error) {
@@ -40,35 +43,7 @@ const getExpense = async (req, res) => {
             return res.status(404).json({ message: "Expense not found" });
         }
 
-        // Fetch attachment from S3
-        let attachmentData;
-        if (expense.attachment) {
-            try {
-                const responseStream = await minioClient.getObject("goodfriends", expense.attachment);
-                const chunks = [];
-                for await (const chunk of responseStream) {
-                    chunks.push(chunk);
-                }
-                attachmentData = Buffer.concat(chunks).toString('base64');
-            } catch (error) {
-                console.error("Error fetching attachment from S3:", error);
-            }
-        }
-
-        // Format attachment data
-        const attachment = attachmentData
-            ? {
-                data: `data:image/jpeg;base64,${attachmentData}`
-            }
-            : null;
-
-        // Include attachment in response
-        const expenseWithAttachment = {
-            ...expense.toObject(),
-            attachment: attachment
-        };
-
-        res.status(200).json(expenseWithAttachment);
+        res.status(200).json(expense);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -91,15 +66,23 @@ const createExpense = async (req, res) => {
             return res.status(403).json({ message: "You are not a member of this group" });
         }
 
-        let expenseAttachment = "";
-
-        if (attachment) {
-            const matches = attachment.data.match(/^data:image\/([a-zA-Z0-9]+);base64,/);
-            const attachmentExtension = matches && matches[1] ? matches[1] : "jpeg";
-            expenseAttachment = Math.random().toString(36).substring(2, 20) + '.' + attachmentExtension ?? "";
+        // Upload file to Minio S3
+        if (!attachment || !attachment.content) {
+            return res.status(400).json({ message: "Attachment data is missing" });
         }
 
-        // Create new expense instance
+        const base64Data = attachment.content;
+        const decodedFileContent = Buffer.from(base64Data, 'base64');
+
+        const bucketName = 'goodfriends';
+        const fileName = `${uuidv4()}.pdf`; // Generate unique filename using uuidv4 with a .pdf extension
+        const metaData = {
+            'Content-Type': 'application/octet-stream' // Set content type as binary
+        };
+
+        await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
+
+        // Save the filename (UUID with .pdf extension) in the database under the attachment field
         const newExpense = new Expense({
             title,
             amount,
@@ -108,28 +91,13 @@ const createExpense = async (req, res) => {
             group_id,
             category,
             refund_recipients,
-            attachment: expenseAttachment
+            attachment: fileName // Save attachment filename (UUID with .pdf extension) to database
         });
 
         // Save the new expense to the database
         const savedExpense = await newExpense.save();
 
-        if (expenseAttachment !== "") {
-            const decodedFileContent = Buffer.from(attachment.data, 'base64');
-
-            minioClient.putObject("goodfriends", expenseAttachment, decodedFileContent, function (error, etag) {
-                if (error) {
-                    console.error(error);
-                    // Rollback expense creation
-                    Expense.deleteOne({ _id: savedExpense._id }).exec();
-                    return res.status(500).json({ error: 'Error saving image to Minio' });
-                } else {
-                    return res.status(201).json(savedExpense);
-                }
-            });
-        } else {
-            return res.status(201).json(savedExpense);
-        }
+        return res.status(201).json(savedExpense);
     } catch (error) {
         // Handle validation errors
         if (error.isJoi) {
