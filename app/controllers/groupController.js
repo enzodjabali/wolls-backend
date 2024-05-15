@@ -2,18 +2,19 @@ const Group = require('../models/Group');
 const User = require('../models/User');
 const { createGroupSchema, updateGroupSchema} = require('../middlewares/validationSchema');
 const GroupMembership = require("../models/GroupMembership");
+const LOCALE = require('../locales/fr-FR');
 
 const createGroup = async (req, res) => {
-    await createGroupSchema.validateAsync(req.body);
-
-    const { name, description } = req.body;
-
     try {
+        await createGroupSchema.validateAsync(req.body);
+
+        const { name, description } = req.body;
+
         // Find the current user
         const currentUser = await User.findOne({ _id: req.userId });
 
         if (!currentUser) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
         // Create a new group instance
@@ -37,7 +38,12 @@ const createGroup = async (req, res) => {
 
         res.status(201).json(savedGroup); // Respond with the saved group
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        if (error.isJoi) {
+            // Joi validation error
+            return res.status(400).json({ error: error.details[0].message });
+        }
+        // Other errors
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -58,7 +64,7 @@ const getAllGroups = async (req, res) => {
         res.status(200).json(allGroups); // Respond with groups that the current user has accepted invitations for
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -71,19 +77,19 @@ const getGroupById = async (req, res) => {
         const group = await Group.findById(groupId);
 
         if (!group) {
-            return res.status(404).json({ message: "Group not found" });
+            return res.status(404).json({ message: LOCALE.groupNotFound });
         }
 
         // Check if the current user is a member of this group
         const isMember = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId });
 
         if (!isMember) {
-            return res.status(403).json({ message: "You are not a member of this group" });
+            return res.status(403).json({ error: LOCALE.notGroupMember });
         }
 
         res.status(200).json(group); // Respond with the found group
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -99,7 +105,7 @@ const updateGroupById = async (req, res) => {
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId, is_administrator: true });
 
         if (!isAdmin) {
-            return res.status(403).json({ message: "You are not an administrator of this group" });
+            return res.status(403).json({ error: LOCALE.notGroupAdmin });
         }
 
         // Find and update the group by its ID
@@ -110,12 +116,12 @@ const updateGroupById = async (req, res) => {
 
         // Check if the group was found and updated
         if (!updatedGroup) {
-            return res.status(404).json({ message: 'Group not found' });
+            return res.status(404).json({ error: LOCALE.groupNotFound });
         }
 
         res.status(200).json(updatedGroup);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
@@ -128,14 +134,14 @@ const deleteGroupById = async (req, res) => {
         const group = await Group.findById(groupId);
 
         if (!group) {
-            return res.status(404).json({ message: 'Group not found' });
+            return res.status(404).json({ error: LOCALE.groupNotFound });
         }
 
         // Check if the current user is an administrator of the group
         const isAdministrator = await GroupMembership.exists({ user_id: userId, group_id: groupId, is_administrator: true });
 
         if (!isAdministrator) {
-            return res.status(403).json({ message: 'You are not authorized to delete this group' });
+            return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroup });
         }
 
         // Delete the group
@@ -143,7 +149,7 @@ const deleteGroupById = async (req, res) => {
 
         res.status(200).json(deletedGroup);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 

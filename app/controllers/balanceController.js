@@ -1,6 +1,7 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
 const User = require('../models/User');
+const LOCALE = require('../locales/fr-FR');
 
 const getBalances = async (req, res) => {
     const groupId = req.params.groupId;
@@ -39,7 +40,7 @@ const getBalances = async (req, res) => {
 
         res.status(200).json({ balances });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
