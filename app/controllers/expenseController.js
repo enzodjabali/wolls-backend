@@ -46,6 +46,11 @@ const getExpense = async (req, res) => {
         const bucketName = 'goodfriends';
         const fileName = expense.attachment;
 
+        // If there's no attachment, return the expense without attempting to fetch attachment data
+        if (!fileName) {
+            return res.status(200).json({ expense });
+        }
+
         const dataChunks = [];
         const dataStream = await minioClient.getObject(bucketName, fileName);
 
@@ -56,9 +61,8 @@ const getExpense = async (req, res) => {
         dataStream.on('end', function () {
             const concatenatedBuffer = Buffer.concat(dataChunks);
             const base64Data = concatenatedBuffer.toString('base64');
-            console.log('Base64 encoded data:', base64Data);
 
-            // Send the Base64 data back to the user
+            // Send the Base64 data back to the user along with other expense details
             res.status(200).json({
                 expense: {
                     ...expense.toObject(),
@@ -71,11 +75,9 @@ const getExpense = async (req, res) => {
         });
 
         dataStream.on('error', function (err) {
-            console.error('Error while streaming data:', err);
             res.status(500).json({ message: "Error fetching attachment data" });
         });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -97,21 +99,21 @@ const createExpense = async (req, res) => {
             return res.status(403).json({ message: "You are not a member of this group" });
         }
 
-        // Upload file to Minio S3
-        if (!attachment || !attachment.content) {
-            return res.status(400).json({ message: "Attachment data is missing" });
+        let fileName = null; // Initialize fileName as null
+
+        // Upload file to Minio S3 if attachment is provided
+        if (attachment && attachment.content) {
+            const base64Data = attachment.content;
+            const decodedFileContent = Buffer.from(base64Data, 'base64');
+
+            const bucketName = 'goodfriends';
+            fileName = `${uuidv4()}${path.extname(attachment.filename)}`; // Generate unique filename using uuidv4
+            const metaData = {
+                'Content-Type': 'application/octet-stream' // Set content type as binary
+            };
+
+            await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
         }
-
-        const base64Data = attachment.content;
-        const decodedFileContent = Buffer.from(base64Data, 'base64');
-
-        const bucketName = 'goodfriends';
-        const fileName = `${uuidv4()}${path.extname(attachment.filename)}`; // Generate unique filename using uuidv4
-        const metaData = {
-            'Content-Type': 'application/octet-stream' // Set content type as binary
-        };
-
-        await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
 
         // Save the filename (UUID with extension) in the database under the attachment field
         const newExpense = new Expense({
@@ -122,7 +124,7 @@ const createExpense = async (req, res) => {
             group_id,
             category,
             refund_recipients,
-            attachment: fileName // Save attachment filename (UUID with extension) to database
+            attachment: fileName // Save attachment filename (UUID with extension) to database, can be null
         });
 
         // Save the new expense to the database
