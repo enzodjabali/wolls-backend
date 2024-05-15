@@ -579,6 +579,70 @@
         }
       }
     },
+    "/v1/users/forgotPassword": {
+      "post": {
+        "tags": ["Users"],
+        "description": "Send a verification code via email to reset password",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ForgotPasswordRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/users/resetPassword": {
+      "post": {
+        "tags": ["Users"],
+        "description": "Reset password with a verification code",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ResetPasswordRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/v1/expenses/{groupId}": {
       "get": {
         "tags": ["Expenses"],
@@ -1053,6 +1117,36 @@
           "example": "Super_newpassword123"
         },
         "confirmPassword": {
+          "type": "string",
+          "example": "Super_newpassword123"
+        }
+      }
+    },
+    "ForgotPasswordRequestBody": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "john.doe@example.com"
+        }
+      }
+    },
+    "ResetPasswordRequestBody": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "john.doe@example.com"
+        },
+        "code": {
+          "type": "string",
+          "example": "789582"
+        },
+        "newPassword": {
+          "type": "string",
+          "example": "Super_newpassword123"
+        },
+        "confirmNewPassword": {
           "type": "string",
           "example": "Super_newpassword123"
         }
