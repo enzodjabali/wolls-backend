@@ -106,14 +106,14 @@ const createExpense = async (req, res) => {
         const decodedFileContent = Buffer.from(base64Data, 'base64');
 
         const bucketName = 'goodfriends';
-        const fileName = `${uuidv4()}.pdf`; // Generate unique filename using uuidv4 with a .pdf extension
+        const fileName = `${uuidv4()}${path.extname(attachment.filename)}`; // Generate unique filename using uuidv4
         const metaData = {
             'Content-Type': 'application/octet-stream' // Set content type as binary
         };
 
         await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
 
-        // Save the filename (UUID with .pdf extension) in the database under the attachment field
+        // Save the filename (UUID with extension) in the database under the attachment field
         const newExpense = new Expense({
             title,
             amount,
@@ -122,7 +122,7 @@ const createExpense = async (req, res) => {
             group_id,
             category,
             refund_recipients,
-            attachment: fileName // Save attachment filename (UUID with .pdf extension) to database
+            attachment: fileName // Save attachment filename (UUID with extension) to database
         });
 
         // Save the new expense to the database
