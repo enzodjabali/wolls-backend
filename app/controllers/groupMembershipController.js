@@ -136,9 +136,6 @@ const manageInvitation = async (req, res) => {
             // Save the updated group membership
             await groupMembership.save();
 
-            // Delete the invitation
-            await GroupMembership.findByIdAndDelete(groupMembership._id);
-
             return res.status(200).json({ message: "L'invitation a été acceptée avec succès" });
         }
 
