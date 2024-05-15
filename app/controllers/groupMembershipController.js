@@ -55,7 +55,7 @@ const getGroupMembers = async (req, res) => {
         const groupMembers = await Promise.all(userIds.map(async userId => {
             const user = await User.findById(userId).select('_id pseudonym'); // Select only _id and pseudonym
             const groupMembership = groupMemberships.find(membership => membership.user_id.toString() === userId.toString());
-            return { _id: user._id, pseudonym: user.pseudonym, is_administrator: groupMembership.is_administrator, has_accepted_invitation: groupMembership.has_accepted_invitation };
+            return { _id: user._id, pseudonym: user.pseudonym, firstname: user.firstname, lastname: user.firstname, is_administrator: groupMembership.is_administrator, has_accepted_invitation: groupMembership.has_accepted_invitation };
         }));
 
         res.status(200).json(groupMembers);
