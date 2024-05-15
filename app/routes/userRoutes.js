@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById, googleLogin } = require ('../controllers/userController');
+const { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById, googleLogin, forgotPassword, resetPassword } = require ('../controllers/userController');
 const router = express.Router();
 
 const authenticateJWT = require('../middlewares/auth');
@@ -14,5 +14,7 @@ router.put('/password', authenticateJWT, updatePasswordCurrentUser);
 router.post('/logout', authenticateJWT, logoutUser);
 router.delete('/', authenticateJWT, deleteCurrentUser);
 router.get('/:id', authenticateJWT, getUserById);
+router.post('/forgotPassword', forgotPassword);
+router.post('/resetPassword', resetPassword);
 
 module.exports = router;

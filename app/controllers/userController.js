@@ -1,8 +1,10 @@
 const User = require('../models/User');
+const ForgotPassword = require('../models/ForgotPassword');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { createUserSchema, updateUserSchema } = require('../middlewares/validationSchema');
 const { OAuth2Client } = require('google-auth-library');
+const sendEmail = require('../middlewares/sendEmail');
 
 const registerUser = async (req, res) => {
     try {
@@ -221,4 +223,81 @@ const getUserById = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById, googleLogin };
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Find the user by email
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate a random verification code (you can use any method you prefer)
+        const verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
+
+        // Store the verification code with the user's email in the ForgotPassword model
+        const forgotPasswordEntry = new ForgotPassword({
+            email: email,
+            code: verificationCode
+        });
+        await forgotPasswordEntry.save();
+
+        // Send the verification code to the user's email
+        const subject = 'Password Reset Verification Code';
+        const text = `Your verification code is: ${verificationCode}`;
+        const emailSent = await sendEmail(email, subject, text);
+
+        if (emailSent) {
+            return res.status(200).json({ message: "Verification code sent successfully. Don't forget to check your junks" });
+        } else {
+            return res.status(500).json({ message: "Failed to send verification code" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, code, newPassword, confirmNewPassword } = req.body;
+
+        // Find the entry in the ForgotPassword model
+        const forgotPasswordEntry = await ForgotPassword.findOne({ email, code });
+
+        if (!forgotPasswordEntry) {
+            return res.status(404).json({ message: 'Invalid verification code or email' });
+        }
+
+        // Check if the new password and confirm new password match
+        if (newPassword !== confirmNewPassword) {
+            return res.status(400).json({ message: 'New password and confirm password do not match' });
+        }
+
+        // Find the user by email
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password
+        user.password = hashedPassword;
+        await user.save();
+
+        // Delete the entry from the ForgotPassword model
+        await ForgotPassword.findOneAndDelete({ email, code });
+
+        res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updatePasswordCurrentUser, logoutUser, deleteCurrentUser, getUserById, googleLogin, forgotPassword, resetPassword };
