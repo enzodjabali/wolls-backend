@@ -227,6 +227,14 @@ const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
 
+        // Check if there is an existing entry for this email in the ForgotPassword model
+        const existingEntry = await ForgotPassword.findOne({ email });
+
+        // If an existing entry is found, delete it
+        if (existingEntry) {
+            await ForgotPassword.findOneAndDelete({ email });
+        }
+
         // Find the user by email
         const user = await User.findOne({ email });
 
@@ -269,6 +277,13 @@ const resetPassword = async (req, res) => {
 
         if (!forgotPasswordEntry) {
             return res.status(404).json({ message: 'Invalid verification code or email' });
+        }
+
+        // Check if the forgot password code is expired (created more than 10 minutes ago)
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+        if (forgotPasswordEntry.createdAt < tenMinutesAgo) {
+            // Code is expired
+            return res.status(400).json({ message: 'Forgot password code has expired' });
         }
 
         // Check if the new password and confirm new password match
