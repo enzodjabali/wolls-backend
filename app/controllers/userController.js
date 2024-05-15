@@ -3,7 +3,6 @@ const ForgotPassword = require('../models/ForgotPassword');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { createUserSchema, updateUserSchema } = require('../middlewares/validationSchema');
-const { OAuth2Client } = require('google-auth-library');
 const sendEmail = require('../middlewares/sendEmail');
 
 const registerUser = async (req, res) => {
