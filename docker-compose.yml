@@ -17,6 +17,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
 
   mongo-express:
     image: mongo-express:${MONGO_EXPRESS_VERSION}
@@ -37,5 +39,11 @@ services:
       - MINIO_ROOT_USER=${MINIO_S3_USERNAME}
       - MINIO_ROOT_PASSWORD=${MINIO_S3_PASSWORD}
       - MINIO_DEFAULT_BUCKETS=goodfriends
+    volumes:
+      - minio_data:/data
     depends_on:
       - api
+
+volumes:
+  mongo_data:
+  minio_data:
