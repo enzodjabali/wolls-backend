@@ -43,9 +43,40 @@ const getExpense = async (req, res) => {
             return res.status(404).json({ message: "Expense not found" });
         }
 
-        res.status(200).json(expense);
+        const bucketName = 'goodfriends';
+        const fileName = expense.attachment;
+
+        const dataChunks = [];
+        const dataStream = await minioClient.getObject(bucketName, fileName);
+
+        dataStream.on('data', function (chunk) {
+            dataChunks.push(chunk);
+        });
+
+        dataStream.on('end', function () {
+            const concatenatedBuffer = Buffer.concat(dataChunks);
+            const base64Data = concatenatedBuffer.toString('base64');
+            console.log('Base64 encoded data:', base64Data);
+
+            // Send the Base64 data back to the user
+            res.status(200).json({
+                expense: {
+                    ...expense.toObject(),
+                    attachment: {
+                        fileName,
+                        content: base64Data
+                    }
+                }
+            });
+        });
+
+        dataStream.on('error', function (err) {
+            console.error('Error while streaming data:', err);
+            res.status(500).json({ message: "Error fetching attachment data" });
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
