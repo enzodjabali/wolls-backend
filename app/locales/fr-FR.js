@@ -1,5 +1,6 @@
 module.exports = {
     // User
+    notConnected: "Vous n'êtes pas connecté",
     firstNameRequired: "Votre prénom est requis",
     firstNameTooShort: "Votre prénom doit comporter au moins 2 caractères",
     firstNameTooLong: "Votre prénom ne peut pas dépasser 15 caractères",
@@ -22,7 +23,7 @@ module.exports = {
     accountSuccessfullyDeleted: "Votre compte a été supprimé avec succès",
     passwordSuccessfullyUpdated: "Votre mot de passe a été mis à jour avec succès",
     wrongCurrentPassword: "Votre mot de passe actuel est incorrect",
-    userNotFound: "Nous n'avons pas pu trouver de compte avec cette adresse e-mail",
+    userNotFound: "Nous n'avons pas pu trouver l'utilisateur",
     verificationCodeSentEmail: "Un code de vérification a été envoyé à votre adresse e-mail (vérifiez votre dossier de courrier indésirable)",
     invalidVerificationCodeOrEmail: "Le code de vérification ou l'adresse e-mail est invalide",
     resetCodeExpired: "Le code de vérification a expiré",
@@ -38,8 +39,6 @@ module.exports = {
     groupNameRequired: "Un nom de groupe est requis",
     groupNameTooShort: "Le nom du groupe doit comporter au moins 2 caractères",
     groupNameTooLong: "Le nom du groupe ne peut pas dépasser 15 caractères",
-    groupDescriptionRequired: "Une description de groupe est requise",
-    groupDescriptionTooShort: "La description du groupe doit comporter au moins 2 caractères",
     groupDescriptionTooLong: "La description du groupe ne peut pas dépasser 30 caractères",
     groupSuccessfullyDeleted: "Le groupe a été supprimé avec succès",
     userDoesNotExist: "L'utilisateur n'existe pas",

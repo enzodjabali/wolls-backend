@@ -14,7 +14,7 @@ const createGroup = async (req, res) => {
         const currentUser = await User.findOne({ _id: req.userId });
 
         if (!currentUser) {
-            return res.status(404).json({ error: LOCALE.userNotFound });
+            return res.status(404).json({ error: LOCALE.notConnected });
         }
 
         // Create a new group instance
@@ -99,7 +99,7 @@ const updateGroupById = async (req, res) => {
 
     try {
         // Validate the request body
-        await updateGroupSchema.validateAsync(req.body);
+        await updateGroupSchema.validateAsync(req.body, { abortEarly: false });
 
         // Check if the user is an administrator of the group
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId, is_administrator: true });
@@ -121,6 +121,14 @@ const updateGroupById = async (req, res) => {
 
         res.status(200).json(updatedGroup);
     } catch (error) {
+        // Handle Joi validation errors separately
+        if (error.name === 'ValidationError') {
+            const errorMessage = error.details.map(detail => detail.message).join(', ');
+            return res.status(400).json({ error: errorMessage });
+        }
+
+        // Handle other errors
+        console.error('Error updating group by ID:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
