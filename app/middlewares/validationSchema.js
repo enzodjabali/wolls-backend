@@ -150,11 +150,25 @@ const updateExpenseSchema = Joi.object({
 //                            Messages                              //
 //////////////////////////////////////////////////////////////////////
 
-const sendMessageSchema = Joi.object({
-    recipientId: Joi.string().messages({
+const sendPrivateMessageSchema = Joi.object({
+    recipientId: Joi.string().required().messages({
+        'string.empty': LOCALE.recipientIdRequired,
         'any.required': LOCALE.recipientIdRequired,
     }),
     groupId: Joi.string().messages({
+        'any.required': LOCALE.groupIdRequired,
+    }),
+    message: Joi.string().min(1).max(30).required().messages({
+        'string.empty': LOCALE.messageNotEmpty,
+        'string.min': LOCALE.messageTooShort,
+        'string.max': LOCALE.messageTooLong,
+        'any.required': LOCALE.messageRequired,
+    }),
+});
+
+const sendGroupMessageSchema = Joi.object({
+    groupId: Joi.string().required().messages({
+        'string.empty': LOCALE.groupIdRequired,
         'any.required': LOCALE.groupIdRequired,
     }),
     message: Joi.string().min(1).max(30).required().messages({
@@ -180,5 +194,6 @@ module.exports = {
     createExpenseSchema,
     updateExpenseSchema,
     // Messages
-    sendMessageSchema,
+    sendPrivateMessageSchema,
+    sendGroupMessageSchema
 };
