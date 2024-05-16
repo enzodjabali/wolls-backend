@@ -96,15 +96,15 @@ const authenticateUserWithGoogle = async (req, res) => {
 
         const tokenParts = googleToken.split('.');
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf-8'));
-        const { email, given_name, family_name } = payload;
-
+        const { email, name, given_name, family_name } = payload;
+        const modifiedNameToPseudonym = (name.replace(/\s/g, '') + Math.floor(Math.random() * 10000).toString().padStart(4, '0')).toLowerCase();
         let user = await User.findOne({ email });
 
         if (!user) {
             const newUser = new User({
                 firstname: given_name,
                 lastname: family_name,
-                pseudonym: given_name,
+                pseudonym: modifiedNameToPseudonym,
                 email: email,
                 password: '',
                 isGoogle: true
@@ -114,7 +114,6 @@ const authenticateUserWithGoogle = async (req, res) => {
             if (given_name !== user.firstname || family_name !== user.lastname) {
                 user.firstname = given_name;
                 user.lastname = family_name;
-                user.pseudonym = given_name;
                 await user.save();
             }
         }
