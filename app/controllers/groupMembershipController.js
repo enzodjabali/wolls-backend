@@ -105,6 +105,10 @@ const deleteGroupMembership = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroupMembers });
         }
 
+        if (userId === currentUserId && isAdmin) {
+            return res.status(403).json({ error: LOCALE.adminCannotRemoveOwnMembership });
+        }
+
         await GroupMembership.findByIdAndDelete(membership._id);
 
         res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
