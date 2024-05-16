@@ -31,6 +31,9 @@ module.exports = {
     pseudonymAlreadyExists: "This pseudonym is already in use",
     emailAlreadyExists: "This email address is already in use",
     googleTokenRequired: "Your google token is required",
+    PasswordResetVerificationCode: "Password Reset Verification Code",
+    YourVerificationCodeIs: "Your verification code is:",
+    VerificationCodeSentSuccessfully: "Verification code sent successfully. Don't forget to check your junks",
 
     // Group
     groupNotFound: "Group not found",

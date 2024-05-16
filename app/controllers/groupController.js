@@ -1,8 +1,8 @@
 const Group = require('../models/Group');
 const User = require('../models/User');
-const { createGroupSchema, updateGroupSchema} = require('../middlewares/validationSchema');
-const GroupMembership = require("../models/GroupMembership");
 const LOCALE = require('../locales/fr-FR');
+const GroupMembership = require("../models/GroupMembership");
+const { createGroupSchema, updateGroupSchema} = require('../middlewares/validationSchema');
 
 const createGroup = async (req, res) => {
     try {

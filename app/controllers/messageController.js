@@ -2,9 +2,10 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const Group = require('../models/Group');
 const GroupMembership = require('../models/GroupMembership');
-const mongoose = require('mongoose');
-const { sendPrivateMessageSchema, sendGroupMessageSchema } = require('../middlewares/validationSchema');
 const LOCALE = require('../locales/fr-FR');
+const { sendPrivateMessageSchema, sendGroupMessageSchema } = require('../middlewares/validationSchema');
+
+const mongoose = require('mongoose');
 
 /**
  * Sends a private message from one user to another
