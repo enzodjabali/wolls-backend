@@ -1,6 +1,5 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
-const User = require('../models/User');
 const LOCALE = require('../locales/fr-FR');
 
 const getBalances = async (req, res) => {

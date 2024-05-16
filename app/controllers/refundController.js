@@ -1,7 +1,27 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require("../models/GroupMembership");
 const LOCALE = require('../locales/fr-FR');
-const { getRefundRecipients } = require('../middlewares/refundUtils');
+
+/**
+ * Calculates refund recipients and their corresponding refund amounts for a given expense
+ * @param {Object} expense The expense object containing amount and refund recipients
+ * @returns {Array} Returns an array of refund objects containing recipient ID and refund amount
+ */
+const getRefundRecipients = (expense) => {
+    const { amount, refund_recipients } = expense;
+    const numRecipients = refund_recipients.length;
+
+    if (numRecipients === 0) {
+        return [];
+    }
+
+    const refundAmountPerRecipient = amount / numRecipients;
+
+    return refund_recipients.map(recipient => ({
+        recipient_id: recipient,
+        refund_amount: refundAmountPerRecipient
+    }));
+};
 
 /**
  * Calculates refunds based on expenses
