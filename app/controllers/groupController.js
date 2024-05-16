@@ -1,7 +1,9 @@
 const Group = require('../models/Group');
 const User = require('../models/User');
+const Expense = require('../models/Expense');
 const GroupMembership = require("../models/GroupMembership");
 const LOCALE = require('../locales/fr-FR');
+const minioClient = require('../middlewares/minioClient');
 const { createGroupSchema, updateGroupSchema} = require('../middlewares/validationSchema');
 
 /**
@@ -160,9 +162,18 @@ const deleteGroupById = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroup });
         }
 
-        const deletedGroup = await Group.findByIdAndDelete(groupId);
+        const expenses = await Expense.find({ group_id: groupId });
 
-        res.status(200).json(deletedGroup);
+        for (const expense of expenses) {
+            if (expense.attachment) {
+                await minioClient.removeObject('expense-attachments', expense.attachment);
+            }
+        }
+
+        await Expense.deleteMany({ group_id: groupId });
+        await Group.findByIdAndDelete(groupId);
+
+        res.status(200).json({ message: LOCALE.groupSuccessfullyDeleted });
     } catch (error) {
         res.status(500).json({ error: LOCALE.internalServerError });
     }
