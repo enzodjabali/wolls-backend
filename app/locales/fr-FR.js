@@ -31,9 +31,10 @@ module.exports = {
     pseudonymAlreadyExists: "Ce pseudonym est déjà utilisé",
     emailAlreadyExists: "Cette adresse email est déjà utilisée",
     googleTokenRequired: "Votre token Google est requis",
-    PasswordResetVerificationCode: "Code de vérification de réinitialisation de votre mot de passe",
-    YourVerificationCodeIs: "Votre code de vérification est :",
-    VerificationCodeSentSuccessfully: "Code de vérification envoyé avec succès. N'oubliez pas de vérifier vos courriers indésirables.",
+    googleUserCannotDeleteAccount: "Les utilisateurs de Google ne peuvent pas modifier leur profil",
+    passwordResetVerificationCode: "Code de vérification de réinitialisation de votre mot de passe",
+    yourVerificationCodeIs: "Votre code de vérification est :",
+    verificationCodeSentSuccessfully: "Code de vérification envoyé avec succès. N'oubliez pas de vérifier vos courriers indésirables.",
 
     // Group
     groupNotFound: "Groupe non trouvé",

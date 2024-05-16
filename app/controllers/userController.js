@@ -165,6 +165,11 @@ const getCurrentUser = async (req, res) => {
  */
 const updateCurrentUser = async (req, res) => {
     try {
+        const currentUser = await User.findById(req.userId);
+        if (currentUser && currentUser.isGoogle) {
+            return res.status(403).json({ error: LOCALE.googleUserCannotDeleteAccount });
+        }
+
         delete req.body.password;
         delete req.body.confirmPassword;
 
@@ -307,12 +312,12 @@ const forgotPassword = async (req, res) => {
         });
         await forgotPasswordEntry.save();
 
-        const subject = LOCALE.PasswordResetVerificationCode;
-        const text = `${LOCALE.YourVerificationCodeIs} ${verificationCode}`;
-        const emailSent = await sendEmail(email, subject, text);
+        const subject = LOCALE.passwordResetVerificationCode;
+        const text = `${LOCALE.yourVerificationCodeIs} ${verificationCode}`;
+        const emailSent = sendEmail(email, subject, text);
 
         if (emailSent) {
-            return res.status(200).json({ message: LOCALE.VerificationCodeSentSuccessfully });
+            return res.status(200).json({ message: LOCALE.verificationCodeSentSuccessfully });
         } else {
             return res.status(500).json({ error: LOCALE.internalServerError });
         }
