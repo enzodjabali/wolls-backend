@@ -28,7 +28,6 @@ APP.listen(PORT, () => {
     console.log(`App listening on port ${PORT}`);
 });
 
-// this disables CORS
 APP.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, authorization");
