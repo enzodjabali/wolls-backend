@@ -53,7 +53,7 @@ const getExpense = async (req, res) => {
             return res.status(404).json({ error: LOCALE.expenseNotFound });
         }
 
-        const bucketName = 'goodfriends';
+        const bucketName = 'expense-attachments';
         const fileName = expense.attachment;
 
         if (!fileName) {
@@ -116,7 +116,7 @@ const createExpense = async (req, res) => {
             const base64Data = attachment.content;
             const decodedFileContent = Buffer.from(base64Data, 'base64');
 
-            const bucketName = 'goodfriends';
+            const bucketName = 'expense-attachments';
             fileName = `${uuidv4()}${path.extname(attachment.filename)}`;
             const metaData = {
                 'Content-Type': 'application/octet-stream'
@@ -206,6 +206,11 @@ const deleteExpense = async (req, res) => {
 
         if (expense.creator_id != req.userId) {
             return res.status(403).json({ error: LOCALE.notAllowedToRemoveExpense });
+        }
+
+        if (expense.attachment) {
+            const bucketName = 'expense-attachments';
+            await minioClient.removeObject(bucketName, expense.attachment);
         }
 
         await Expense.findByIdAndDelete(expenseId);
