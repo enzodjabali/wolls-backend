@@ -30,6 +30,7 @@ module.exports = {
     nowDisconnected: "You are now disconnected",
     pseudonymAlreadyExists: "This pseudonym is already in use",
     emailAlreadyExists: "This email address is already in use",
+    googleTokenRequired: "Your google token is required",
 
     // Group
     groupNotFound: "Group not found",
