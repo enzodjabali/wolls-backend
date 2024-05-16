@@ -2,18 +2,23 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const Group = require('../models/Group');
 const GroupMembership = require('../models/GroupMembership');
+const mongoose = require('mongoose');
 const { sendPrivateMessageSchema, sendGroupMessageSchema } = require('../middlewares/validationSchema');
 const LOCALE = require('../locales/fr-FR');
 
+/**
+ * Sends a private message from one user to another
+ * @param {Object} req The request object containing recipientId and message in req.body
+ * @param {Object} res The response object to send the result
+ * @returns {Object} Returns the saved message if successful, otherwise returns an error response
+ */
 const sendPrivateMessage = async (req, res) => {
     try {
         await sendPrivateMessageSchema.validateAsync(req.body, { abortEarly: false });
 
         const { recipientId, message } = req.body;
-        const senderId = req.userId; // Assuming user is authenticated
-
-        // Check if the recipient user exists
         const recipientUser = await User.findById(recipientId);
+        const senderId = req.userId;
 
         if (!recipientUser) {
             return res.status(404).json({ error: LOCALE.userNotFound });
@@ -33,46 +38,42 @@ const sendPrivateMessage = async (req, res) => {
             res.status(500).json({ error: LOCALE.internalServerError });
         }
     } catch (error) {
-        // Handle Joi validation errors separately
         if (error.name === 'ValidationError') {
             const errorMessage = error.details.map(detail => detail.message).join(', ');
             return res.status(400).json({ error: errorMessage });
         }
 
-        // Handle CastError specifically
         if (error.name === 'CastError') {
             return res.status(400).json({ error: LOCALE.userNotFound });
         }
 
-        // Handle other errors
         console.error('Error sending private message:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
-const mongoose = require('mongoose');
-
+/**
+ * Sends a group message to a specified group
+ * @param {Object} req The request object containing groupId and message in req.body
+ * @param {Object} res The response object to send the result
+ * @returns {Object} Returns the saved message if successful, otherwise returns an error response
+ */
 const sendGroupMessage = async (req, res) => {
     try {
         await sendGroupMessageSchema.validateAsync(req.body, { abortEarly: false });
 
         const { groupId, message } = req.body;
-        const senderId = req.userId; // Assuming user is authenticated
+        const group = await Group.findById(groupId);
+        const senderId = req.userId;
+        const isMember = await GroupMembership.exists({ user_id: senderId, group_id: groupId });
 
-        // Check if the groupId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(groupId)) {
             return res.status(400).json({ error: LOCALE.groupNotFound });
         }
 
-        // Check if the group exists
-        const group = await Group.findById(groupId);
-
         if (!group) {
             return res.status(404).json({ error: LOCALE.groupNotFound });
         }
-
-        // Check if the current user is a member of the group
-        const isMember = await GroupMembership.exists({ user_id: senderId, group_id: groupId });
 
         if (!isMember) {
             return res.status(403).json({ error: LOCALE.notGroupMember });
@@ -92,18 +93,22 @@ const sendGroupMessage = async (req, res) => {
             res.status(500).json({ error: LOCALE.internalServerError });
         }
     } catch (error) {
-        // Handle Joi validation errors separately
         if (error.name === 'ValidationError') {
             const errorMessage = error.details.map(detail => detail.message).join(', ');
             return res.status(400).json({ error: errorMessage });
         }
 
-        // Handle other errors
         console.error('Error sending group message:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 
+/**
+ * Retrieves private messages between the current user and a specified recipient
+ * @param {Object} req The request object containing the userId in req.userId and the recipientId in req.params
+ * @param {Object} res The response object to send the retrieved messages
+ * @returns {Object} Returns an array of messages if successful, otherwise returns an error response
+ */
 const getPrivateMessages = async (req, res) => {
     try {
         const userId = req.userId;
@@ -122,18 +127,21 @@ const getPrivateMessages = async (req, res) => {
     }
 };
 
+/**
+ * Retrieves messages from a specified group
+ * @param {Object} req The request object containing the groupId in req.params and the userId in req.userId
+ * @param {Object} res The response object to send the retrieved messages
+ * @returns {Object} Returns an array of messages if successful, otherwise returns an error response
+ */
 const getGroupMessages = async (req, res) => {
     try {
         const { groupId } = req.params;
-
-        // Check if the current user has accepted the group invitation
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
+        const messages = await Message.find({ groupId });
 
         if (!membership || !membership.has_accepted_invitation) {
             return res.status(403).json({ error: LOCALE.notAllowedViewGroupMessages });
         }
-
-        const messages = await Message.find({ groupId });
 
         res.status(200).json(messages);
     } catch (error) {
