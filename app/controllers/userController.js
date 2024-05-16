@@ -80,6 +80,11 @@ const authenticateUserWithGoogle = async (req, res) => {
     try {
         const { googleToken } = req.body;
 
+        // Ensure the existence of the googleToken in the request body
+        if (!req.body.googleToken) {
+            return res.status(400).json({ error: LOCALE.googleTokenRequired });
+        }
+
         // Split the token by '.'
         const tokenParts = googleToken.split('.');
 
@@ -119,7 +124,6 @@ const authenticateUserWithGoogle = async (req, res) => {
         // Return the JWT token
         res.status(200).json({ token });
     } catch (error) {
-        console.error('Error authenticating with Google:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
