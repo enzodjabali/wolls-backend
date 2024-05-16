@@ -162,8 +162,10 @@ const updateCurrentUser = async (req, res) => {
             }
         });
 
-        // Validate the update schema and updates the user
-        await updateUserSchema.validateAsync(req.body);
+        // Validate the update schema
+        await updateUserSchema.validateAsync(req.body, { abortEarly: false });
+
+        // Update the user
         const result = await User.findByIdAndUpdate(req.userId, req.body);
 
         // Checks if user was found and updated
@@ -173,6 +175,14 @@ const updateCurrentUser = async (req, res) => {
             res.status(404).json({ error: LOCALE.userNotFound });
         }
     } catch (error) {
+        // Handle Joi validation errors separately
+        if (error.name === 'ValidationError') {
+            const errorMessage = error.details.map(detail => detail.message).join(', ');
+            return res.status(400).json({ error: errorMessage });
+        }
+
+        // Handle other errors
+        console.error('Error updating current user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
