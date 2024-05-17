@@ -9,7 +9,7 @@ router.post('/login', authenticateUser);
 router.post('/login/google', authenticateUserWithGoogle);
 router.get('/', authenticateJWT, getUsersList);
 router.get('/me', authenticateJWT, getCurrentUser);
-router.put('/', authenticateJWT, updateCurrentUser);
+router.patch('/', authenticateJWT, updateCurrentUser);
 router.put('/password', authenticateJWT, updateCurrentUserPassword);
 router.post('/logout', authenticateJWT, logoutUser);
 router.delete('/', authenticateJWT, deleteCurrentUser);
