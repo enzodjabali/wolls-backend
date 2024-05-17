@@ -2,10 +2,12 @@ const User = require('../models/User');
 const ForgotPassword = require('../models/ForgotPassword');
 const LOCALE = require('../locales/fr-FR');
 const sendEmail = require('../middlewares/sendEmail');
+const minioClient = require('../middlewares/minioClient');
 const { createUserSchema, updateUserSchema } = require('../middlewares/validationSchema');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Registers a new user
@@ -150,8 +152,51 @@ const getUsersList = async (req, res) => {
  */
 const getCurrentUser = async (req, res) => {
     try {
-        const currentUser = await User.findOne({ _id: req.userId }, { _id: 1, firstname: 1, lastname: 1, pseudonym: 1, email: 1 });
-        res.status(200).json(currentUser);
+        const currentUser = await User.findOne({ _id: req.userId });
+
+        if (!currentUser) {
+            return res.status(404).json({ error: LOCALE.userNotFound });
+        }
+
+        const userData = {
+            _id: currentUser._id,
+            firstname: currentUser.firstname,
+            lastname: currentUser.lastname,
+            pseudonym: currentUser.pseudonym,
+            email: currentUser.email,
+            iban: currentUser.iban,
+            ibanAttachment: currentUser.ibanAttachment
+        };
+
+        if (currentUser.ibanAttachment) {
+            const bucketName = 'user-ibans';
+            const fileName = currentUser.ibanAttachment;
+
+            const dataChunks = [];
+            const dataStream = await minioClient.getObject(bucketName, fileName);
+
+            dataStream.on('data', function (chunk) {
+                dataChunks.push(chunk);
+            });
+
+            dataStream.on('end', function () {
+                const concatenatedBuffer = Buffer.concat(dataChunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+
+                userData.ibanAttachment = {
+                    fileName,
+                    content: base64Data
+                };
+
+                res.status(200).json(userData);
+            });
+
+            dataStream.on('error', function (err) {
+                res.status(500).json({ error: LOCALE.internalServerError });
+            });
+        } else {
+            res.status(200).json(userData);
+        }
     } catch (error) {
         res.status(500).json({ error: LOCALE.internalServerError });
     }
@@ -166,14 +211,26 @@ const getCurrentUser = async (req, res) => {
 const updateCurrentUser = async (req, res) => {
     try {
         const currentUser = await User.findById(req.userId);
-        if (currentUser && currentUser.isGoogle) {
-            return res.status(403).json({ error: LOCALE.googleUserCannotDeleteAccount });
-        }
 
         delete req.body.password;
         delete req.body.confirmPassword;
 
-        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email'];
+        const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email'];
+        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'iban', 'ibanAttachment'];
+
+        if (currentUser && currentUser.isGoogle) {
+            const forbiddenFields = [];
+            forbiddenFieldsForGoogleUsers.forEach(field => {
+                if (req.body[field]) {
+                    forbiddenFields.push(field);
+                }
+            });
+
+            if (forbiddenFields.length > 0) {
+                return res.status(400).json({ error: LOCALE.googleUserCannotUpdateAccount });
+            }
+        }
+
         Object.keys(req.body).forEach(key => {
             if (!allowedFields.includes(key)) {
                 delete req.body[key];
@@ -182,10 +239,50 @@ const updateCurrentUser = async (req, res) => {
 
         await updateUserSchema.validateAsync(req.body, { abortEarly: false });
 
-        const result = await User.findByIdAndUpdate(req.userId, req.body);
+        if (req.body.ibanAttachment) {
+            const attachmentData = req.body.ibanAttachment;
 
-        if (result) {
-            res.status(200).send({ message: LOCALE.accountSuccessfullyUpdated });
+            if (!attachmentData || !attachmentData.filename || !attachmentData.content) {
+                return res.status(400).json({ error: LOCALE.ibanMalformed });
+            }
+
+            const decodedFileContent = Buffer.from(attachmentData.content, 'base64');
+
+            if (!decodedFileContent.toString('utf8').startsWith('%PDF-')) {
+                return res.status(400).json({ error: LOCALE.ibanMustPdf });
+            }
+
+            if (currentUser.ibanAttachment) {
+                const bucketName = 'user-ibans';
+                const existingFileName = currentUser.ibanAttachment;
+                try {
+                    await minioClient.removeObject(bucketName, existingFileName);
+                } catch (deleteError) {
+                    console.error('Error deleting existing IBAN attachment from S3:', deleteError);
+                    res.status(500).json({ error: LOCALE.internalServerError });
+                }
+            }
+
+            const bucketName = 'user-ibans';
+            const fileName = `${uuidv4()}.pdf`;
+            const metaData = {
+                'Content-Type': 'application/pdf'
+            };
+
+            try {
+                await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
+            } catch (uploadError) {
+                console.error('Error uploading IBAN attachment to S3:', uploadError);
+                return res.status(500).json({ error: LOCALE.internalServerError });
+            }
+
+            req.body.ibanAttachment = fileName;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.userId, req.body);
+
+        if (updatedUser) {
+            res.status(200).send(updatedUser);
         } else {
             res.status(404).json({ error: LOCALE.userNotFound });
         }
@@ -251,14 +348,30 @@ const logoutUser = (req, res) => {
  * @param {Object} res The response object to send a success message or an error response
  * @returns {Object} Returns a success message if deletion is successful, otherwise returns an error response
  */
-const deleteCurrentUser = (req, res) => {
-    User.findByIdAndDelete({_id: req.userId})
-        .then(result => {
-            res.send({ message: LOCALE.accountSuccessfullyDeleted });
-        })
-        .catch(error => {
-            res.status(500).json({ error: LOCALE.internalServerError });
-        });
+const deleteCurrentUser = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const user = await User.findById(userId);
+
+        if (user.ibanAttachment) {
+            const bucketName = 'user-ibans';
+            const fileName = user.ibanAttachment;
+
+            try {
+                await minioClient.removeObject(bucketName, fileName);
+            } catch (deleteError) {
+                console.error('Error deleting IBAN attachment from S3:', deleteError);
+                res.status(500).json({ error: LOCALE.internalServerError });
+            }
+        }
+
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({ message: LOCALE.accountSuccessfullyDeleted });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
 };
 
 /**
