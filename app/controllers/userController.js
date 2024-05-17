@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const ForgotPassword = require('../models/ForgotPassword');
+const GroupMembership = require('../models/GroupMembership');
 const LOCALE = require('../locales/fr-FR');
 const sendEmail = require('../middlewares/sendEmail');
 const minioClient = require('../middlewares/minioClient');
@@ -413,6 +414,7 @@ const deleteCurrentUser = async (req, res) => {
  */
 const getUserById = async (req, res) => {
     const userId = req.params.id;
+    const currentUserId = req.userId;
 
     try {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -423,6 +425,18 @@ const getUserById = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ error: LOCALE.userNotFound });
+        }
+
+        const groupMembershipsCurrentUser = await GroupMembership.find({ user_id: currentUserId, has_accepted_invitation: true });
+        const groupIdsCurrentUser = groupMembershipsCurrentUser.map(membership => membership.group_id.toString());
+
+        const groupMembershipsRequestedUser = await GroupMembership.find({ user_id: userId, has_accepted_invitation: true });
+        const groupIdsRequestedUser = groupMembershipsRequestedUser.map(membership => membership.group_id.toString());
+
+        const commonGroupIds = groupIdsCurrentUser.filter(groupId => groupIdsRequestedUser.includes(groupId));
+
+        if (commonGroupIds.length === 0) {
+            return res.status(403).json({ error: LOCALE.notAllowedToAccessUserDetails });
         }
 
         const userData = {

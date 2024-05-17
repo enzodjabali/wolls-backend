@@ -44,6 +44,7 @@ module.exports = {
     emailDoesNotBelongToUser: "Cet e-mail n'appartient à aucun compte existant",
     ibanMalformed: "Votre IBAN en pièce jointe est manquant ou mal formé",
     ibanMustPdf: "Votre IBAN en pièce jointe doit être un fichier PDF",
+    notAllowedToAccessUserDetails: "Vous n'êtes pas autorisé à accéder aux détails de l'utilisateur",
 
     // Group
     groupNotFound: "Groupe non trouvé",
