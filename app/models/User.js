@@ -19,6 +19,10 @@ const userSchema = new Schema({
         unique: true,
         required: true
     },
+    emailPaypal: {
+        type: String,
+        required: false
+    },
     password: {
         type: String,
         required: false

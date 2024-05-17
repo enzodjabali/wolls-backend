@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const ForgotPassword = require('../models/ForgotPassword');
+const GroupMembership = require('../models/GroupMembership');
 const LOCALE = require('../locales/fr-FR');
 const sendEmail = require('../middlewares/sendEmail');
 const minioClient = require('../middlewares/minioClient');
@@ -177,6 +178,7 @@ const getCurrentUser = async (req, res) => {
             lastname: currentUser.lastname,
             pseudonym: currentUser.pseudonym,
             email: currentUser.email,
+            emailPaypal: currentUser.emailPaypal,
             iban: currentUser.iban,
             ibanAttachment: currentUser.ibanAttachment
         };
@@ -231,7 +233,7 @@ const updateCurrentUser = async (req, res) => {
         delete req.body.confirmPassword;
 
         const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email'];
-        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'iban', 'ibanAttachment'];
+        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment'];
 
         if (currentUser && currentUser.isGoogle) {
             const forbiddenFields = [];
@@ -413,10 +415,11 @@ const deleteCurrentUser = async (req, res) => {
  */
 const getUserById = async (req, res) => {
     const userId = req.params.id;
+    const currentUserId = req.userId;
 
     try {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({ error: LOCALE.invalidUserId });
+            return res.status(400).json({ error: LOCALE.userNotFound });
         }
 
         const user = await User.findById(userId);
@@ -425,7 +428,68 @@ const getUserById = async (req, res) => {
             return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
-        res.status(200).json({ pseudonym: user.pseudonym });
+        const groupMembershipsCurrentUser = await GroupMembership.find({ user_id: currentUserId, has_accepted_invitation: true });
+        const groupIdsCurrentUser = groupMembershipsCurrentUser.map(membership => membership.group_id.toString());
+
+        const groupMembershipsRequestedUser = await GroupMembership.find({ user_id: userId, has_accepted_invitation: true });
+        const groupIdsRequestedUser = groupMembershipsRequestedUser.map(membership => membership.group_id.toString());
+
+        const commonGroupIds = groupIdsCurrentUser.filter(groupId => groupIdsRequestedUser.includes(groupId));
+
+        if (commonGroupIds.length === 0) {
+            return res.status(403).json({ error: LOCALE.notAllowedToAccessUserDetails });
+        }
+
+        const userData = {
+            pseudonym: user.pseudonym
+        };
+
+        if (user.firstname) {
+            userData.firstname = user.firstname;
+        }
+
+        if (user.lastname) {
+            userData.lastname = user.lastname;
+        }
+
+        if (user.emailPaypal) {
+            userData.emailPaypal = user.emailPaypal;
+        }
+
+        if (user.iban) {
+            userData.iban = user.iban;
+        }
+
+        if (user.ibanAttachment) {
+            const bucketName = 'user-ibans';
+            const fileName = user.ibanAttachment;
+
+            const dataChunks = [];
+            const dataStream = await minioClient.getObject(bucketName, fileName);
+
+            dataStream.on('data', function (chunk) {
+                dataChunks.push(chunk);
+            });
+
+            dataStream.on('end', function () {
+                const concatenatedBuffer = Buffer.concat(dataChunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+
+                userData.ibanAttachment = {
+                    fileName,
+                    content: base64Data
+                };
+
+                res.status(200).json(userData);
+            });
+
+            dataStream.on('error', function (err) {
+                console.error('Error fetching the user IBAN attachment:', err);
+                res.status(500).json({ error: LOCALE.internalServerError });
+            });
+        } else {
+            res.status(200).json(userData);
+        }
     } catch (error) {
         console.error('Error fetching the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });

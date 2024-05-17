@@ -1162,7 +1162,11 @@
           "type": "string",
           "example": "john.doe@example.com"
         },
-        "attachment": {
+        "emailPaypal": {
+          "type": "string",
+          "example": "johndoe.paypal@example.com"
+        },
+        "iban": {
           "type": "string",
           "example": "FR76 3000 3004 5200 0372 9915 040"
         },
