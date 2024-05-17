@@ -512,6 +512,22 @@ const getUserById = async (req, res) => {
             userData.iban = user.iban;
         }
 
+        const fetchAttachment = async (bucketName, fileName) => {
+            try {
+                const data = await minioClient.getObject(bucketName, fileName);
+                const chunks = [];
+                for await (const chunk of data) {
+                    chunks.push(chunk);
+                }
+                const concatenatedBuffer = Buffer.concat(chunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+                return { fileName, content: base64Data };
+            } catch (error) {
+                console.error(`Error fetching ${bucketName} attachment:`, error);
+                throw error;
+            }
+        };
+
         if (user.ibanAttachment) {
             const bucketName = 'user-ibans';
             const fileName = user.ibanAttachment;
@@ -519,28 +535,53 @@ const getUserById = async (req, res) => {
             const dataChunks = [];
             const dataStream = await minioClient.getObject(bucketName, fileName);
 
-            dataStream.on('data', function (chunk) {
+            dataStream.on('data', async function (chunk) {
                 dataChunks.push(chunk);
             });
 
-            dataStream.on('end', function () {
-                const concatenatedBuffer = Buffer.concat(dataChunks);
-                const base64Data = concatenatedBuffer.toString('base64');
+            dataStream.on('end', async function () {
+                try {
+                    const concatenatedBuffer = Buffer.concat(dataChunks);
+                    const base64Data = concatenatedBuffer.toString('base64');
 
-                userData.ibanAttachment = {
-                    fileName,
-                    content: base64Data
-                };
+                    userData.ibanAttachment = {
+                        fileName,
+                        content: base64Data
+                    };
 
-                res.status(200).json(userData);
+                    // Check if the user is Google, and include the picture accordingly
+                    if (user.isGoogle) {
+                        userData.picture = user.picture;
+                        res.status(200).json(userData);
+                    } else {
+                        if (user.picture) {
+                            const pictureData = await fetchAttachment('user-pictures', user.picture);
+                            userData.picture = pictureData;
+                        }
+                        res.status(200).json(userData);
+                    }
+                } catch (error) {
+                    console.error('Error processing user data:', error);
+                    res.status(500).json({ error: LOCALE.internalServerError });
+                }
             });
 
-            dataStream.on('error', function (err) {
+            dataStream.on('error', async function (err) {
                 console.error('Error fetching the user IBAN attachment:', err);
                 res.status(500).json({ error: LOCALE.internalServerError });
             });
         } else {
-            res.status(200).json(userData);
+            // Check if the user is Google, and include the picture accordingly
+            if (user.isGoogle) {
+                userData.picture = user.picture;
+                res.status(200).json(userData);
+            } else {
+                if (user.picture) {
+                    const pictureData = await fetchAttachment('user-pictures', user.picture);
+                    userData.picture = pictureData;
+                }
+                res.status(200).json(userData);
+            }
         }
     } catch (error) {
         console.error('Error fetching the user:', error);
