@@ -152,8 +152,51 @@ const getUsersList = async (req, res) => {
  */
 const getCurrentUser = async (req, res) => {
     try {
-        const currentUser = await User.findOne({ _id: req.userId }, { _id: 1, firstname: 1, lastname: 1, pseudonym: 1, email: 1 });
-        res.status(200).json(currentUser);
+        const currentUser = await User.findOne({ _id: req.userId });
+
+        if (!currentUser) {
+            return res.status(404).json({ error: LOCALE.userNotFound });
+        }
+
+        const userData = {
+            _id: currentUser._id,
+            firstname: currentUser.firstname,
+            lastname: currentUser.lastname,
+            pseudonym: currentUser.pseudonym,
+            email: currentUser.email,
+            iban: currentUser.iban,
+            ibanAttachment: currentUser.ibanAttachment
+        };
+
+        if (currentUser.ibanAttachment) {
+            const bucketName = 'user-ibans';
+            const fileName = currentUser.ibanAttachment;
+
+            const dataChunks = [];
+            const dataStream = await minioClient.getObject(bucketName, fileName);
+
+            dataStream.on('data', function (chunk) {
+                dataChunks.push(chunk);
+            });
+
+            dataStream.on('end', function () {
+                const concatenatedBuffer = Buffer.concat(dataChunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+
+                userData.ibanAttachment = {
+                    fileName,
+                    content: base64Data
+                };
+
+                res.status(200).json(userData);
+            });
+
+            dataStream.on('error', function (err) {
+                res.status(500).json({ error: LOCALE.internalServerError });
+            });
+        } else {
+            res.status(200).json(userData);
+        }
     } catch (error) {
         res.status(500).json({ error: LOCALE.internalServerError });
     }
