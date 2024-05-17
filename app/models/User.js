@@ -12,6 +12,7 @@ const userSchema = new Schema({
     },
     pseudonym: {
         type: String,
+        unique: true,
         required: true
     },
     email: {

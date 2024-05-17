@@ -241,6 +241,13 @@ const updateCurrentUser = async (req, res) => {
             }
         }
 
+        if (req.body.pseudonym && req.body.pseudonym !== currentUser.pseudonym) {
+            const pseudonymExists = await User.exists({ pseudonym: req.body.pseudonym });
+            if (pseudonymExists) {
+                return res.status(400).json({ error: LOCALE.pseudonymAlreadyExists });
+            }
+        }
+
         const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email', 'picture'];
         const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment', 'picture'];
 
