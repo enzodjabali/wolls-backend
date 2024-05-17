@@ -175,6 +175,10 @@ const updateExpense = async (req, res) => {
     const expenseId = req.params.id;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(expenseId)) {
+            return res.status(400).json({ error: LOCALE.expenseNotFound });
+        }
+
         await updateExpenseSchema.validateAsync(req.body);
 
         let expense = await Expense.findById(expenseId);
@@ -244,6 +248,10 @@ const deleteExpense = async (req, res) => {
     const expenseId = req.params.id;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(expenseId)) {
+            return res.status(400).json({ error: LOCALE.expenseNotFound });
+        }
+
         let expense = await Expense.findById(expenseId);
 
         if (!expense) {
