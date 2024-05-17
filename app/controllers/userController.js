@@ -50,6 +50,7 @@ const registerUser = async (req, res) => {
 
         res.status(201).json(savedUser);
     } catch (error) {
+        console.error('Error logging in the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -78,6 +79,7 @@ const authenticateUser = async (req, res) => {
         const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
         res.status(200).json({ token });
     } catch (error) {
+        console.error('Error logging in the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -123,6 +125,7 @@ const authenticateUserWithGoogle = async (req, res) => {
         const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
         res.status(200).json({ token });
     } catch (error) {
+        console.error('Error logging in user with google:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -139,7 +142,7 @@ const getUsersList = async (req, res) => {
             res.status(200).json(result);
         })
         .catch(err => {
-            console.log(err);
+            console.error('Error fetching the users:', error);
             res.status(500).json({ error: LOCALE.internalServerError })
         });
 };
@@ -192,12 +195,14 @@ const getCurrentUser = async (req, res) => {
             });
 
             dataStream.on('error', function (err) {
+                console.error('Error fetching the user iban attachment:', error);
                 res.status(500).json({ error: LOCALE.internalServerError });
             });
         } else {
             res.status(200).json(userData);
         }
     } catch (error) {
+        console.error('Error fetching the current user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -323,6 +328,7 @@ const updateCurrentUserPassword = async (req, res) => {
 
         res.status(200).send({ message: LOCALE.passwordSuccessfullyUpdated });
     } catch (error) {
+        console.error('Error updating the current user\'s password:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -338,6 +344,7 @@ const logoutUser = (req, res) => {
         res.clearCookie('jwt');
         res.status(200).json({ message: LOCALE.nowDisconnected });
     } catch (error) {
+        console.error('Error logging out the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -369,7 +376,7 @@ const deleteCurrentUser = async (req, res) => {
 
         res.status(200).json({ message: LOCALE.accountSuccessfullyDeleted });
     } catch (error) {
-        console.error(error);
+        console.error('Error deleting the current user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -392,6 +399,7 @@ const getUserById = async (req, res) => {
 
         res.status(200).json({ pseudonym: user.pseudonym });
     } catch (error) {
+        console.error('Error fetching the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -436,6 +444,7 @@ const forgotPassword = async (req, res) => {
         if (emailSent) {
             return res.status(200).json({ message: LOCALE.verificationCodeSentSuccessfully });
         } else {
+            console.error('Error sending the verification code by email:', error);
             return res.status(500).json({ error: LOCALE.internalServerError });
         }
     } catch (error) {

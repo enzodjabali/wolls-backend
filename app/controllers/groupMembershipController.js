@@ -41,6 +41,7 @@ const createGroupMembership = async (req, res) => {
 
         res.status(201).json(savedMembership);
     } catch (error) {
+        console.error('Error creating the group membership:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -72,6 +73,7 @@ const getGroupMembers = async (req, res) => {
 
         res.status(200).json(groupMembers);
     } catch (error) {
+        console.error('Error fetching the group members:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -113,6 +115,7 @@ const deleteGroupMembership = async (req, res) => {
 
         res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
     } catch (error) {
+        console.error('Error deleting a group membership:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -133,6 +136,7 @@ const getInvitations = async (req, res) => {
 
         res.status(200).json(groups);
     } catch (error) {
+        console.error('Error fetching the invitations:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -167,6 +171,7 @@ const manageInvitation = async (req, res) => {
 
         return res.status(400).json({ error: LOCALE.invalidInvitationValue });
     } catch (error) {
+        console.error('Error managing the invitation:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };

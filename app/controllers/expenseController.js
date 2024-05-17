@@ -27,6 +27,7 @@ const getExpenses = async (req, res) => {
 
         res.status(200).json(expenses);
     } catch (error) {
+        console.error('Error fetching the expenses:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -82,10 +83,12 @@ const getExpense = async (req, res) => {
             });
         });
 
-        dataStream.on('error', function (err) {
+        dataStream.on('error', function (error) {
+            console.error('Error fetching the expense attachment:', error);
             res.status(500).json({ error: LOCALE.internalServerError });
         });
     } catch (error) {
+        console.error('Error fetching the expense:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -143,6 +146,7 @@ const createExpense = async (req, res) => {
         if (error.isJoi) {
             return res.status(400).json({ error: error.details[0].message });
         } else {
+            console.error('Error creating the expense:', error);
             return res.status(500).json({ error: LOCALE.internalServerError });
         }
     }
@@ -246,6 +250,7 @@ const deleteExpense = async (req, res) => {
 
         res.status(200).json({ message: LOCALE.expenseSuccessfullyDeleted });
     } catch (error) {
+        console.error('Error deleting the expense:', error);
         res.status(500).json({ message: LOCALE.internalServerError });
     }
 };

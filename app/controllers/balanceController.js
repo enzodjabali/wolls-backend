@@ -34,6 +34,7 @@ const getBalances = async (req, res) => {
 
         res.status(200).json({ balances });
     } catch (error) {
+        console.error('Error fetching the balances:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };

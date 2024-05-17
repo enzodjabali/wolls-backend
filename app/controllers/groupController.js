@@ -44,6 +44,7 @@ const createGroup = async (req, res) => {
         if (error.isJoi) {
             return res.status(400).json({ error: error.details[0].message });
         }
+        console.error('Error creating the group:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -66,7 +67,7 @@ const getGroupsList = async (req, res) => {
 
         res.status(200).json(allGroups);
     } catch (error) {
-        console.log(error);
+        console.error('Error fetching the groups:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -96,6 +97,7 @@ const getGroupById = async (req, res) => {
 
         res.status(200).json(group);
     } catch (error) {
+        console.error('Error fetching the group:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -175,6 +177,7 @@ const deleteGroupById = async (req, res) => {
 
         res.status(200).json({ message: LOCALE.groupSuccessfullyDeleted });
     } catch (error) {
+        console.error('Error deleting the group:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };

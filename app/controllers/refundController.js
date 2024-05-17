@@ -114,6 +114,7 @@ const getRefunds = async (req, res) => {
 
         res.status(200).json(refunds);
     } catch (error) {
+        console.error('Error fetching the refunds:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };

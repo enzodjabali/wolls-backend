@@ -124,6 +124,7 @@ const getPrivateMessages = async (req, res) => {
 
         res.status(200).json(messages);
     } catch (error) {
+        console.error('Error fetching the private messages:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -146,6 +147,7 @@ const getGroupMessages = async (req, res) => {
 
         res.status(200).json(messages);
     } catch (error) {
+        console.error('Error fetching the group messages:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
