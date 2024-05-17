@@ -438,6 +438,22 @@ const deleteCurrentUser = async (req, res) => {
         const userId = req.userId;
         const user = await User.findById(userId);
 
+        if (!user) {
+            return res.status(404).json({ error: LOCALE.userNotFound });
+        }
+
+        if (!user.isGoogle && user.picture) {
+            const bucketName = 'user-pictures';
+            const fileName = user.picture;
+
+            try {
+                await minioClient.removeObject(bucketName, fileName);
+            } catch (deleteError) {
+                console.error('Error deleting picture from S3:', deleteError);
+                res.status(500).json({ error: LOCALE.internalServerError });
+            }
+        }
+
         if (user.ibanAttachment) {
             const bucketName = 'user-ibans';
             const fileName = user.ibanAttachment;
