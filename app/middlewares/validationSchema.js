@@ -80,6 +80,7 @@ const updateUserSchema = Joi.object({
         'string.min': LOCALE.passwordTooShort,
         'any.only': LOCALE.passwordsNotMatching,
     }),
+    picture: Joi.any(),
 });
 
 //////////////////////////////////////////////////////////////////////

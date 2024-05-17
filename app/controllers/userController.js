@@ -232,8 +232,8 @@ const updateCurrentUser = async (req, res) => {
         delete req.body.password;
         delete req.body.confirmPassword;
 
-        const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email'];
-        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment'];
+        const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email', 'picture'];
+        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment', 'picture'];
 
         if (currentUser && currentUser.isGoogle) {
             const forbiddenFields = [];
@@ -296,10 +296,53 @@ const updateCurrentUser = async (req, res) => {
             req.body.ibanAttachment = fileName;
         }
 
+        if (req.body.picture) {
+            const pictureData = req.body.picture;
+
+            if (!pictureData || !pictureData.filename || !pictureData.content) {
+                return res.status(400).json({ error: LOCALE.pictureMalformed });
+            }
+
+            const decodedFileContent = Buffer.from(pictureData.content, 'base64');
+            const supportedFormats = ['image/png', 'image/jpeg', 'image/jpg'];
+
+            const isSupportedFormat = supportedFormats.some(format => pictureData.filename.endsWith(format.replace('image/', '.')));
+            if (!isSupportedFormat) {
+                return res.status(400).json({ error: LOCALE.pictureWrongFormat });
+            }
+
+            if (currentUser.picture) {
+                const bucketName = 'user-pictures';
+                const existingFileName = currentUser.picture;
+                try {
+                    await minioClient.removeObject(bucketName, existingFileName);
+                } catch (deleteError) {
+                    console.error('Error deleting existing picture from S3:', deleteError);
+                    return res.status(500).json({ error: LOCALE.internalServerError });
+                }
+            }
+
+            const bucketName = 'user-pictures';
+            const fileExtension = pictureData.filename.split('.').pop().toLowerCase();
+            const fileName = `${uuidv4()}.${fileExtension}`;
+            const metaData = {
+                'Content-Type': pictureData.contentType
+            };
+
+            try {
+                await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
+            } catch (uploadError) {
+                console.error('Error uploading picture to S3:', uploadError);
+                return res.status(500).json({ error: LOCALE.internalServerError });
+            }
+
+            req.body.picture = fileName;
+        }
+
         const updatedUser = await User.findByIdAndUpdate(req.userId, req.body);
 
         if (updatedUser) {
-            res.status(200).send(updatedUser);
+            res.status(200).send(await User.findById(req.userId));
         } else {
             res.status(404).json({ error: LOCALE.userNotFound });
         }

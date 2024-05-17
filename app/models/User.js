@@ -38,6 +38,10 @@ const userSchema = new Schema({
     ibanAttachment: {
         type: String,
         required: false
+    },
+    picture: {
+        type: String,
+        required: false
     }
 });
 
