@@ -232,6 +232,13 @@ const updateCurrentUser = async (req, res) => {
         delete req.body.password;
         delete req.body.confirmPassword;
 
+        if (req.body.email && req.body.email !== currentUser.email) {
+            const emailExists = await User.exists({ email: req.body.email });
+            if (emailExists) {
+                return res.status(400).json({ error: LOCALE.emailAlreadyExists });
+            }
+        }
+
         const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email', 'picture'];
         const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment', 'picture'];
 
