@@ -321,7 +321,17 @@ const updateCurrentUser = async (req, res) => {
 const updateCurrentUserPassword = async (req, res) => {
     try {
         const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        if (!currentPassword || typeof currentPassword !== 'string') {
+            return res.status(400).json({ error: LOCALE.currentPasswordRequired });
+        }
+
         const currentUser = await User.findById(req.userId);
+
+        if (!currentUser) {
+            return res.status(404).json({ error: LOCALE.userNotFound });
+        }
+
         const isPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
 
         if (!isPasswordValid) {
