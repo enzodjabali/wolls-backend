@@ -1182,6 +1182,19 @@
               "example": "JVBERi0xLjzsU...gxOQolJUVPRgo="
             }
           }
+        },
+        "picture": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string",
+              "example": "profile.png"
+            },
+            "content": {
+              "type": "string",
+              "example": "iVBORw0KGgoAAA...ElAAAAElFkSuQmCC="
+            }
+          }
         }
       }
     },
