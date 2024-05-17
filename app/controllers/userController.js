@@ -184,7 +184,7 @@ const updateCurrentUser = async (req, res) => {
             });
 
             if (forbiddenFields.length > 0) {
-                return res.status(400).json({ error: 'Forbidden field(s) set for Google users' });
+                return res.status(400).json({ error: LOCALE.googleUserCannotUpdateAccount });
             }
         }
 
@@ -200,13 +200,13 @@ const updateCurrentUser = async (req, res) => {
             const attachmentData = req.body.ibanAttachment;
 
             if (!attachmentData || !attachmentData.filename || !attachmentData.content) {
-                return res.status(400).json({ error: 'IBAN attachment data is missing or malformed' });
+                return res.status(400).json({ error: LOCALE.ibanMalformed });
             }
 
             const decodedFileContent = Buffer.from(attachmentData.content, 'base64');
 
             if (!decodedFileContent.toString('utf8').startsWith('%PDF-')) {
-                return res.status(400).json({ error: 'IBAN attachment must be a PDF file' });
+                return res.status(400).json({ error: LOCALE.ibanMustPdf });
             }
 
             if (currentUser.ibanAttachment) {
@@ -229,18 +229,18 @@ const updateCurrentUser = async (req, res) => {
                 await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
             } catch (uploadError) {
                 console.error('Error uploading IBAN attachment to S3:', uploadError);
-                return res.status(500).json({ error: 'Error uploading IBAN attachment to S3' });
+                return res.status(500).json({ error: LOCALE.internalServerError });
             }
 
             req.body.ibanAttachment = fileName;
         }
 
-        const result = await User.findByIdAndUpdate(req.userId, req.body);
+        const updatedUser = await User.findByIdAndUpdate(req.userId, req.body);
 
-        if (result) {
-            res.status(200).send({ message: 'Account successfully updated' });
+        if (updatedUser) {
+            res.status(200).send(updatedUser);
         } else {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ error: LOCALE.userNotFound });
         }
     } catch (error) {
         if (error.name === 'ValidationError') {
@@ -249,7 +249,7 @@ const updateCurrentUser = async (req, res) => {
         }
 
         console.error('Error updating current user:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
 

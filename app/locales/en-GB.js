@@ -34,12 +34,14 @@ module.exports = {
     pseudonymAlreadyExists: "This pseudonym is already in use",
     emailAlreadyExists: "This email address is already in use",
     googleTokenRequired: "Your google token is required",
-    googleUserCannotDeleteAccount: "Google users can't update their profile",
+    googleUserCannotUpdateAccount: "Google users can't update their firstname, lastname, pseudonym, picture and email",
     googleUserCannotResetPassword: "Google users can't reset their password",
     passwordResetVerificationCode: "Password Reset Verification Code",
     yourVerificationCodeIs: "Your verification code is:",
     verificationCodeSentSuccessfully: "Verification code sent successfully. Don't forget to check your junks",
     emailDoesNotBelongToUser: "This email does not belong to any existing account",
+    ibanMalformed: "Your IBAN attachment is missing or malformed",
+    ibanMustPdf: "Your IBAN attachment must be a PDF file",
 
     // Group
     groupNotFound: "Group not found",
