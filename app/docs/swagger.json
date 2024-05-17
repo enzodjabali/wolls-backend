@@ -595,7 +595,7 @@
     "/v1/users/password": {
       "put": {
         "tags": ["Users"],
-        "description": "Update current user",
+        "description": "Update current user's password",
         "parameters": [
           {
             "name": "Authorization",

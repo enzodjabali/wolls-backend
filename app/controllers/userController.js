@@ -301,7 +301,7 @@ const forgotPassword = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ error: LOCALE.userNotFound });
+            return res.status(404).json({ error: LOCALE.emailDoesNotBelongToUser });
         }
 
         const verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code

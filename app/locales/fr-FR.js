@@ -35,6 +35,7 @@ module.exports = {
     passwordResetVerificationCode: "Code de vérification de réinitialisation de votre mot de passe",
     yourVerificationCodeIs: "Votre code de vérification est :",
     verificationCodeSentSuccessfully: "Code de vérification envoyé avec succès. N'oubliez pas de vérifier vos courriers indésirables.",
+    emailDoesNotBelongToUser: "Cet e-mail n'appartient à aucun compte existant",
 
     // Group
     groupNotFound: "Groupe non trouvé",
