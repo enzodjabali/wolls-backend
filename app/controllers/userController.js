@@ -111,7 +111,7 @@ const authenticateUserWithGoogle = async (req, res) => {
         }
 
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf-8'));
-        const { email, name, given_name, family_name } = payload;
+        const { email, name, given_name, family_name, picture } = payload;
         const modifiedNameToPseudonym = (name.replace(/\s/g, '') + Math.floor(Math.random() * 10000).toString().padStart(4, '0')).toLowerCase();
         let user = await User.findOne({ email });
 
@@ -122,13 +122,15 @@ const authenticateUserWithGoogle = async (req, res) => {
                 pseudonym: modifiedNameToPseudonym,
                 email: email,
                 password: '',
-                isGoogle: true
+                isGoogle: true,
+                picture: picture
             });
             user = await newUser.save();
         } else {
-            if (given_name !== user.firstname || family_name !== user.lastname) {
+            if (given_name !== user.firstname || family_name !== user.lastname || picture !== user.picture) {
                 user.firstname = given_name;
                 user.lastname = family_name;
+                user.picture = picture;
                 await user.save();
             }
         }
@@ -204,8 +206,12 @@ const getCurrentUser = async (req, res) => {
             userData.ibanAttachment = await fetchAttachment('user-ibans', currentUser.ibanAttachment);
         }
 
-        if (currentUser.picture) {
-            userData.picture = await fetchAttachment('user-pictures', currentUser.picture);
+        if (currentUser.isGoogle) {
+            userData.picture = currentUser.picture;
+        } else {
+            if (currentUser.picture) {
+                userData.picture = await fetchAttachment('user-pictures', currentUser.picture);
+            }
         }
 
         res.status(200).json(userData);
