@@ -170,19 +170,48 @@ const updateExpense = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notAllowedToEditExpense });
         }
 
-        const { title, amount, category, refund_recipients } = req.body;
-        expense.title = title;
-        expense.amount = amount;
-        expense.category = category;
-        expense.refund_recipients = refund_recipients;
+        const allowedFields = ['title', 'amount', 'category', 'refund_recipients', 'attachment'];
+        Object.keys(req.body).forEach(key => {
+            if (!allowedFields.includes(key)) {
+                delete req.body[key];
+            }
+        });
+
+        if (req.body.attachment && req.body.attachment.content) {
+            if (expense.attachment) {
+                const bucketName = 'expense-attachments';
+                await minioClient.removeObject(bucketName, expense.attachment);
+            }
+
+            const attachment = req.body.attachment;
+            const base64Data = attachment.content;
+            const decodedFileContent = Buffer.from(base64Data, 'base64');
+
+            const bucketName = 'expense-attachments';
+            const fileName = `${uuidv4()}${path.extname(attachment.filename)}`;
+            const metaData = {
+                'Content-Type': 'application/octet-stream'
+            };
+
+            try {
+                await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
+            } catch (uploadError) {
+                console.error('Error uploading attachment:', uploadError);
+                return res.status(500).json({ error: LOCALE.attachmentUploadError });
+            }
+
+            req.body.attachment = fileName;
+        }
+
+        Object.assign(expense, req.body);
 
         const updatedExpense = await expense.save();
-
         res.status(200).json(updatedExpense);
     } catch (error) {
         if (error.isJoi) {
-            res.status(400).json({ error: error.details[0].message });
+            res.status(400).json({ error: error.message });
         } else {
+            console.error('Error updating expense:', error.message);
             res.status(500).json({ error: LOCALE.internalServerError });
         }
     }

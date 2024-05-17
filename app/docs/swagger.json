@@ -2,11 +2,11 @@
   "swagger": "2.0",
   "info": {
     "version": "1.0.0",
-    "title": "Good friends API",
-    "description": "API for Good friends",
+    "title": "Goodfriends API",
+    "description": "REST API for Goodfriends",
     "contact": {
       "name": "API Support",
-      "email": "test@supinfo.com"
+      "email": "support@goodfriends.tech"
     }
   },
   "host": "127.0.0.1:3000",
@@ -83,7 +83,7 @@
           }
         }
       },
-      "put": {
+      "patch": {
         "tags": ["Groups"],
         "description": "Update a new group",
         "parameters": [
@@ -537,7 +537,7 @@
       }
     },
     "/v1/users/": {
-      "put": {
+      "patch": {
         "tags": ["Users"],
         "description": "Update current user",
         "parameters": [
@@ -595,7 +595,7 @@
     "/v1/users/password": {
       "put": {
         "tags": ["Users"],
-        "description": "Update current user",
+        "description": "Update current user's password",
         "parameters": [
           {
             "name": "Authorization",
@@ -797,7 +797,7 @@
       }
     },
     "/v1/expenses/{id}": {
-      "put": {
+      "patch": {
         "tags": ["Expenses"],
         "description": "Update an expense",
         "parameters": [
@@ -817,7 +817,7 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/ExpenseRequestBodyUpdate"
+              "$ref": "#/definitions/ExpenseRequestBody"
             }
           }
         ],
@@ -1248,30 +1248,6 @@
               "type": "string",
               "example": "iVBORw0KGgoAAAAN...AAAAElFTkSuQmCC"
             }
-          }
-        }
-      }
-    },
-    "ExpenseRequestBodyUpdate": {
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string",
-          "example": "Dinner"
-        },
-        "amount": {
-          "type": "number",
-          "example": 50.0
-        },
-        "category": {
-          "type": "string",
-          "example": "Food"
-        },
-        "refund_recipients": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "example": "609e8e51894f0b0008317211"
           }
         }
       }
