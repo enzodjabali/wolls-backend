@@ -6,6 +6,7 @@ const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/val
 
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 
 /**
  * Retrieves all expenses associated with a specific group if the current user is a member and has accepted the group invitation
@@ -17,6 +18,10 @@ const getExpenses = async (req, res) => {
     const groupId = req.params.groupId;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
 
         if (!membership || !membership.has_accepted_invitation) {
@@ -42,6 +47,14 @@ const getExpense = async (req, res) => {
     const { groupId, expenseId } = req.params;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(expenseId)) {
+            return res.status(400).json({ error: LOCALE.expenseNotFound });
+        }
+
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
 
         if (!membership || !membership.has_accepted_invitation) {
