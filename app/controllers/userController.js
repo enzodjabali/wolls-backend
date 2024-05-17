@@ -66,11 +66,12 @@ const authenticateUser = async (req, res) => {
         let { pseudonym, password } = req.body;
 
         const user = await User.findOne({ pseudonym });
-        const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!user) {
             return res.status(401).json({ error: LOCALE.wrongPasswordOrPseudonym });
         }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
             return res.status(401).json({ error: LOCALE.wrongPasswordOrPseudonym });
