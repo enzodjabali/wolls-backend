@@ -32,6 +32,7 @@ module.exports = {
     emailAlreadyExists: "Cette adresse email est déjà utilisée",
     googleTokenRequired: "Votre token Google est requis",
     googleUserCannotDeleteAccount: "Les utilisateurs de Google ne peuvent pas modifier leur profil",
+    googleUserCannotResetPassword: "Les utilisateurs de Google ne peuvent pas réinitialiser leur mot de passe",
     passwordResetVerificationCode: "Code de vérification de réinitialisation de votre mot de passe",
     yourVerificationCodeIs: "Votre code de vérification est :",
     verificationCodeSentSuccessfully: "Code de vérification envoyé avec succès. N'oubliez pas de vérifier vos courriers indésirables.",

@@ -292,13 +292,17 @@ const getUserById = async (req, res) => {
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
+
+        const user = await User.findOne({ email });
+        if (user && user.isGoogle) {
+            return res.status(403).json({ error: LOCALE.googleUserCannotResetPassword });
+        }
+
         const existingEntry = await ForgotPassword.findOne({ email });
 
         if (existingEntry) {
             await ForgotPassword.findOneAndDelete({ email });
         }
-
-        const user = await User.findOne({ email });
 
         if (!user) {
             return res.status(404).json({ error: LOCALE.emailDoesNotBelongToUser });

@@ -2,11 +2,11 @@
   "swagger": "2.0",
   "info": {
     "version": "1.0.0",
-    "title": "Good friends API",
-    "description": "API for Good friends",
+    "title": "Goodfriends API",
+    "description": "REST API for Goodfriends",
     "contact": {
       "name": "API Support",
-      "email": "test@supinfo.com"
+      "email": "support@goodfriends.tech"
     }
   },
   "host": "127.0.0.1:3000",
