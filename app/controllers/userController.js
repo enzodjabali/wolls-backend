@@ -216,6 +216,7 @@ const updateCurrentUser = async (req, res) => {
                     await minioClient.removeObject(bucketName, existingFileName);
                 } catch (deleteError) {
                     console.error('Error deleting existing IBAN attachment from S3:', deleteError);
+                    res.status(500).json({ error: LOCALE.internalServerError });
                 }
             }
 
@@ -304,14 +305,30 @@ const logoutUser = (req, res) => {
  * @param {Object} res The response object to send a success message or an error response
  * @returns {Object} Returns a success message if deletion is successful, otherwise returns an error response
  */
-const deleteCurrentUser = (req, res) => {
-    User.findByIdAndDelete({_id: req.userId})
-        .then(result => {
-            res.send({ message: LOCALE.accountSuccessfullyDeleted });
-        })
-        .catch(error => {
-            res.status(500).json({ error: LOCALE.internalServerError });
-        });
+const deleteCurrentUser = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const user = await User.findById(userId);
+
+        if (user.ibanAttachment) {
+            const bucketName = 'user-ibans';
+            const fileName = user.ibanAttachment;
+
+            try {
+                await minioClient.removeObject(bucketName, fileName);
+            } catch (deleteError) {
+                console.error('Error deleting IBAN attachment from S3:', deleteError);
+                res.status(500).json({ error: LOCALE.internalServerError });
+            }
+        }
+
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({ message: LOCALE.accountSuccessfullyDeleted });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
 };
 
 /**
