@@ -180,39 +180,35 @@ const getCurrentUser = async (req, res) => {
             email: currentUser.email,
             emailPaypal: currentUser.emailPaypal,
             iban: currentUser.iban,
-            ibanAttachment: currentUser.ibanAttachment
+            ibanAttachment: currentUser.ibanAttachment,
+            picture: currentUser.picture
+        };
+
+        const fetchAttachment = async (bucketName, fileName) => {
+            try {
+                const data = await minioClient.getObject(bucketName, fileName);
+                const chunks = [];
+                for await (const chunk of data) {
+                    chunks.push(chunk);
+                }
+                const concatenatedBuffer = Buffer.concat(chunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+                return { fileName, content: base64Data };
+            } catch (error) {
+                console.error(`Error fetching ${bucketName} attachment:`, error);
+                throw error;
+            }
         };
 
         if (currentUser.ibanAttachment) {
-            const bucketName = 'user-ibans';
-            const fileName = currentUser.ibanAttachment;
-
-            const dataChunks = [];
-            const dataStream = await minioClient.getObject(bucketName, fileName);
-
-            dataStream.on('data', function (chunk) {
-                dataChunks.push(chunk);
-            });
-
-            dataStream.on('end', function () {
-                const concatenatedBuffer = Buffer.concat(dataChunks);
-                const base64Data = concatenatedBuffer.toString('base64');
-
-                userData.ibanAttachment = {
-                    fileName,
-                    content: base64Data
-                };
-
-                res.status(200).json(userData);
-            });
-
-            dataStream.on('error', function (err) {
-                console.error('Error fetching the user iban attachment:', error);
-                res.status(500).json({ error: LOCALE.internalServerError });
-            });
-        } else {
-            res.status(200).json(userData);
+            userData.ibanAttachment = await fetchAttachment('user-ibans', currentUser.ibanAttachment);
         }
+
+        if (currentUser.picture) {
+            userData.picture = await fetchAttachment('user-pictures', currentUser.picture);
+        }
+
+        res.status(200).json(userData);
     } catch (error) {
         console.error('Error fetching the current user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
