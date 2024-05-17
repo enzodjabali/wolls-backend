@@ -163,6 +163,10 @@ const deleteGroupById = async (req, res) => {
     const userId = req.userId;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         const group = await Group.findById(groupId);
         const isAdministrator = await GroupMembership.exists({ user_id: userId, group_id: groupId, is_administrator: true });
 
