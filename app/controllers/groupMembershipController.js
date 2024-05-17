@@ -17,7 +17,7 @@ const createGroupMembership = async (req, res) => {
 
     try {
         if (!mongoose.Types.ObjectId.isValid(group_id)) {
-            return res.status(400).json({ error: LOCALE.invalidGroupId });
+            return res.status(400).json({ error: LOCALE.groupNotFound });
         }
 
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id, is_administrator: true });
