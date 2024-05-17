@@ -61,6 +61,12 @@ const updateUserSchema = Joi.object({
         'string.empty': LOCALE.emailRequired,
         'string.email': LOCALE.invalidEmail,
     }),
+    iban: Joi.string().min(25).max(35).messages({
+        'string.empty': LOCALE.ibanNotEmpty,
+        'string.min': LOCALE.ibanTooShort,
+        'string.max': LOCALE.ibanTooLong,
+    }),
+    ibanAttachment: Joi.any(),
     password: Joi.string().min(8).messages({
         'string.empty': LOCALE.passwordRequired,
         'string.min': LOCALE.passwordTooShort,

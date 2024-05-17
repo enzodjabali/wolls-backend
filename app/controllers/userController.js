@@ -2,10 +2,12 @@ const User = require('../models/User');
 const ForgotPassword = require('../models/ForgotPassword');
 const LOCALE = require('../locales/fr-FR');
 const sendEmail = require('../middlewares/sendEmail');
+const minioClient = require('../middlewares/minioClient');
 const { createUserSchema, updateUserSchema } = require('../middlewares/validationSchema');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Registers a new user
@@ -166,14 +168,11 @@ const getCurrentUser = async (req, res) => {
 const updateCurrentUser = async (req, res) => {
     try {
         const currentUser = await User.findById(req.userId);
-        if (currentUser && currentUser.isGoogle) {
-            return res.status(403).json({ error: LOCALE.googleUserCannotDeleteAccount });
-        }
 
         delete req.body.password;
         delete req.body.confirmPassword;
 
-        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email'];
+        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'iban', 'ibanAttachment'];
         Object.keys(req.body).forEach(key => {
             if (!allowedFields.includes(key)) {
                 delete req.body[key];
@@ -182,12 +181,61 @@ const updateCurrentUser = async (req, res) => {
 
         await updateUserSchema.validateAsync(req.body, { abortEarly: false });
 
+        // IBAN attachment upload logic
+        if (req.body.ibanAttachment) {
+            const attachmentData = req.body.ibanAttachment;
+
+            // Verify that the attachmentData is provided and is of the expected structure
+            if (!attachmentData || !attachmentData.filename || !attachmentData.content) {
+                return res.status(400).json({ error: 'IBAN attachment data is missing or malformed' });
+            }
+
+            // Decode base64 content
+            const decodedFileContent = Buffer.from(attachmentData.content, 'base64');
+
+            // Verify that the decoded content starts with '%PDF-'
+            if (!decodedFileContent.toString('utf8').startsWith('%PDF-')) {
+                return res.status(400).json({ error: 'IBAN attachment must be a PDF file' });
+            }
+
+            // Check if the user already has an IBAN attachment
+            if (currentUser.ibanAttachment) {
+                // Delete the existing IBAN attachment from S3
+                const bucketName = 'user-ibans';
+                const existingFileName = currentUser.ibanAttachment;
+                try {
+                    await minioClient.removeObject(bucketName, existingFileName);
+                } catch (deleteError) {
+                    console.error('Error deleting existing IBAN attachment from S3:', deleteError);
+                    // Handle error if unable to delete existing attachment
+                    // You may choose to return an error response or continue with the update process
+                }
+            }
+
+            // Upload new IBAN attachment to S3
+            const bucketName = 'user-ibans';
+            const fileName = `${uuidv4()}.pdf`;
+            const metaData = {
+                'Content-Type': 'application/pdf'
+            };
+
+            try {
+                await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
+            } catch (uploadError) {
+                console.error('Error uploading IBAN attachment to S3:', uploadError);
+                return res.status(500).json({ error: 'Error uploading IBAN attachment to S3' });
+            }
+
+            // Update IBAN attachment field with the new filename
+            req.body.ibanAttachment = fileName;
+        }
+
         const result = await User.findByIdAndUpdate(req.userId, req.body);
 
         if (result) {
-            res.status(200).send({ message: LOCALE.accountSuccessfullyUpdated });
+            res.status(200).send({ message: 'Account successfully updated' });
         } else {
-            res.status(404).json({ error: LOCALE.userNotFound });
+            res.status(404).json({ error: 'User not found' });
         }
     } catch (error) {
         if (error.name === 'ValidationError') {
@@ -196,7 +244,7 @@ const updateCurrentUser = async (req, res) => {
         }
 
         console.error('Error updating current user:', error);
-        res.status(500).json({ error: LOCALE.internalServerError });
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 

@@ -26,6 +26,14 @@ const userSchema = new Schema({
     isGoogle: {
         type: Boolean,
         default: false
+    },
+    iban: {
+        type: String,
+        required: false
+    },
+    ibanAttachment: {
+        type: String,
+        required: false
     }
 });
 
