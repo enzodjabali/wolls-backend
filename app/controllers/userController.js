@@ -100,11 +100,15 @@ const authenticateUserWithGoogle = async (req, res) => {
     try {
         const { googleToken } = req.body;
 
-        if (!req.body.googleToken) {
-            return res.status(400).json({ error: LOCALE.googleTokenRequired });
+        if (!googleToken || typeof googleToken !== 'string') {
+            return res.status(400).json({ error: LOCALE.invalidGoogleToken });
         }
 
         const tokenParts = googleToken.split('.');
+        if (tokenParts.length !== 3) {
+            return res.status(400).json({ error: LOCALE.invalidGoogleToken });
+        }
+
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf-8'));
         const { email, name, given_name, family_name } = payload;
         const modifiedNameToPseudonym = (name.replace(/\s/g, '') + Math.floor(Math.random() * 10000).toString().padStart(4, '0')).toLowerCase();

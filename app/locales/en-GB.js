@@ -34,6 +34,7 @@ module.exports = {
     pseudonymAlreadyExists: "This pseudonym is already in use",
     emailAlreadyExists: "This email address is already in use",
     googleTokenRequired: "Your google token is required",
+    invalidGoogleToken: "Your google token is invalid",
     googleUserCannotUpdateAccount: "Google users can't update their firstname, lastname, pseudonym, picture and email",
     googleUserCannotResetPassword: "Google users can't reset their password",
     passwordResetVerificationCode: "Password Reset Verification Code",
