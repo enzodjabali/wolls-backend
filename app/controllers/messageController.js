@@ -115,6 +115,10 @@ const getPrivateMessages = async (req, res) => {
         const userId = req.userId;
         const { recipientId } = req.params;
 
+        if (!mongoose.Types.ObjectId.isValid(recipientId)) {
+            return res.status(400).json({ error: LOCALE.userNotFound });
+        }
+
         const messages = await Message.find({
             $or: [
                 { senderId: userId, recipientId: recipientId },
@@ -138,6 +142,11 @@ const getPrivateMessages = async (req, res) => {
 const getGroupMessages = async (req, res) => {
     try {
         const { groupId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
         const messages = await Message.find({ groupId });
 
