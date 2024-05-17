@@ -416,7 +416,7 @@ const getUserById = async (req, res) => {
 
     try {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({ error: LOCALE.invalidUserId });
+            return res.status(400).json({ error: LOCALE.userNotFound });
         }
 
         const user = await User.findById(userId);
@@ -425,7 +425,40 @@ const getUserById = async (req, res) => {
             return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
-        res.status(200).json({ pseudonym: user.pseudonym });
+        const userData = {
+            pseudonym: user.pseudonym
+        };
+
+        if (user.ibanAttachment) {
+            const bucketName = 'user-ibans';
+            const fileName = user.ibanAttachment;
+
+            const dataChunks = [];
+            const dataStream = await minioClient.getObject(bucketName, fileName);
+
+            dataStream.on('data', function (chunk) {
+                dataChunks.push(chunk);
+            });
+
+            dataStream.on('end', function () {
+                const concatenatedBuffer = Buffer.concat(dataChunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+
+                userData.ibanAttachment = {
+                    fileName,
+                    content: base64Data
+                };
+
+                res.status(200).json(userData);
+            });
+
+            dataStream.on('error', function (err) {
+                console.error('Error fetching the user IBAN attachment:', err);
+                res.status(500).json({ error: LOCALE.internalServerError });
+            });
+        } else {
+            res.status(200).json(userData);
+        }
     } catch (error) {
         console.error('Error fetching the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
