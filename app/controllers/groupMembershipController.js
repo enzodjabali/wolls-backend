@@ -3,6 +3,8 @@ const User = require('../models/User');
 const Group = require('../models/Group');
 const LOCALE = require('../locales/fr-FR');
 
+const mongoose = require('mongoose');
+
 /**
  * Creates a group membership if the current user is an administrator of the group
  * @param {Object} req The request object containing user_pseudonym and group_id in req.body and the userId in req.userId
@@ -14,6 +16,10 @@ const createGroupMembership = async (req, res) => {
     const currentUserId = req.userId;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(group_id)) {
+            return res.status(400).json({ error: LOCALE.invalidGroupId });
+        }
+
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id, is_administrator: true });
 
         if (!isAdmin) {
