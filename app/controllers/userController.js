@@ -51,10 +51,6 @@ const registerUser = async (req, res) => {
 
         res.status(201).json(savedUser);
     } catch (error) {
-        if (error.name === 'ValidationError' && error.isJoi) {
-            const errorMessage = error.details.map(detail => detail.message).join(', ');
-            return res.status(400).json({ error: errorMessage });
-        }
         console.error('Error logging in the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
@@ -398,7 +394,7 @@ const getUserById = async (req, res) => {
 
     try {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({ error: LOCALE.userNotFound });
+            return res.status(400).json({ error: LOCALE.invalidUserId });
         }
 
         const user = await User.findById(userId);
