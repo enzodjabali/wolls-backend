@@ -1161,6 +1161,23 @@
         "email": {
           "type": "string",
           "example": "john.doe@example.com"
+        },
+        "attachment": {
+          "type": "string",
+          "example": "FR76 3000 3004 5200 0372 9915 040"
+        },
+        "ibanAttachment": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string",
+              "example": "iban.pdf"
+            },
+            "content": {
+              "type": "string",
+              "example": "JVBERi0xLjzsU...gxOQolJUVPRgo="
+            }
+          }
         }
       }
     },
