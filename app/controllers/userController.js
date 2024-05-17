@@ -172,7 +172,22 @@ const updateCurrentUser = async (req, res) => {
         delete req.body.password;
         delete req.body.confirmPassword;
 
+        const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email'];
         const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'iban', 'ibanAttachment'];
+
+        if (currentUser && currentUser.isGoogle) {
+            const forbiddenFields = [];
+            forbiddenFieldsForGoogleUsers.forEach(field => {
+                if (req.body[field]) {
+                    forbiddenFields.push(field);
+                }
+            });
+
+            if (forbiddenFields.length > 0) {
+                return res.status(400).json({ error: 'Forbidden field(s) set for Google users' });
+            }
+        }
+
         Object.keys(req.body).forEach(key => {
             if (!allowedFields.includes(key)) {
                 delete req.body[key];
@@ -181,38 +196,29 @@ const updateCurrentUser = async (req, res) => {
 
         await updateUserSchema.validateAsync(req.body, { abortEarly: false });
 
-        // IBAN attachment upload logic
         if (req.body.ibanAttachment) {
             const attachmentData = req.body.ibanAttachment;
 
-            // Verify that the attachmentData is provided and is of the expected structure
             if (!attachmentData || !attachmentData.filename || !attachmentData.content) {
                 return res.status(400).json({ error: 'IBAN attachment data is missing or malformed' });
             }
 
-            // Decode base64 content
             const decodedFileContent = Buffer.from(attachmentData.content, 'base64');
 
-            // Verify that the decoded content starts with '%PDF-'
             if (!decodedFileContent.toString('utf8').startsWith('%PDF-')) {
                 return res.status(400).json({ error: 'IBAN attachment must be a PDF file' });
             }
 
-            // Check if the user already has an IBAN attachment
             if (currentUser.ibanAttachment) {
-                // Delete the existing IBAN attachment from S3
                 const bucketName = 'user-ibans';
                 const existingFileName = currentUser.ibanAttachment;
                 try {
                     await minioClient.removeObject(bucketName, existingFileName);
                 } catch (deleteError) {
                     console.error('Error deleting existing IBAN attachment from S3:', deleteError);
-                    // Handle error if unable to delete existing attachment
-                    // You may choose to return an error response or continue with the update process
                 }
             }
 
-            // Upload new IBAN attachment to S3
             const bucketName = 'user-ibans';
             const fileName = `${uuidv4()}.pdf`;
             const metaData = {
@@ -226,7 +232,6 @@ const updateCurrentUser = async (req, res) => {
                 return res.status(500).json({ error: 'Error uploading IBAN attachment to S3' });
             }
 
-            // Update IBAN attachment field with the new filename
             req.body.ibanAttachment = fileName;
         }
 
