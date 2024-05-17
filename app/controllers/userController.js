@@ -326,6 +326,10 @@ const updateCurrentUserPassword = async (req, res) => {
             return res.status(400).json({ error: LOCALE.currentPasswordRequired });
         }
 
+        if (!newPassword || !confirmPassword || typeof newPassword !== 'string' || typeof confirmPassword !== 'string') {
+            return res.status(400).json({ error: LOCALE.newPasswordRequired });
+        }
+
         const currentUser = await User.findById(req.userId);
 
         if (!currentUser) {
