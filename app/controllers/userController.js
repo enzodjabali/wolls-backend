@@ -178,6 +178,7 @@ const getCurrentUser = async (req, res) => {
             lastname: currentUser.lastname,
             pseudonym: currentUser.pseudonym,
             email: currentUser.email,
+            emailPaypal: currentUser.emailPaypal,
             iban: currentUser.iban,
             ibanAttachment: currentUser.ibanAttachment
         };
@@ -232,7 +233,7 @@ const updateCurrentUser = async (req, res) => {
         delete req.body.confirmPassword;
 
         const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email'];
-        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'iban', 'ibanAttachment'];
+        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment'];
 
         if (currentUser && currentUser.isGoogle) {
             const forbiddenFields = [];
@@ -449,6 +450,10 @@ const getUserById = async (req, res) => {
 
         if (user.lastname) {
             userData.lastname = user.lastname;
+        }
+
+        if (user.emailPaypal) {
+            userData.emailPaypal = user.emailPaypal;
         }
 
         if (user.iban) {

@@ -61,6 +61,10 @@ const updateUserSchema = Joi.object({
         'string.empty': LOCALE.emailRequired,
         'string.email': LOCALE.invalidEmail,
     }),
+    emailPaypal: Joi.string().email().lowercase().messages({
+        'string.empty': LOCALE.emailPaypalNotEmpty,
+        'string.email': LOCALE.invalidEmailPaypal,
+    }),
     iban: Joi.string().min(25).max(35).messages({
         'string.empty': LOCALE.ibanNotEmpty,
         'string.min': LOCALE.ibanTooShort,

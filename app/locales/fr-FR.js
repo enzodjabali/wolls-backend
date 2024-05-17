@@ -14,6 +14,8 @@ module.exports = {
     emailTooShort: "Votre adresse e-mail doit comporter au moins 2 caractères",
     emailTooLong: "Votre adresse e-mail ne peut pas dépasser 30 caractères",
     invalidEmail: "Votre adresse e-mail n'est pas valide",
+    emailPaypalNotEmpty: "Votre email paypal ne peut pas être vide",
+    invalidEmailPaypal: "Votre email paypal n'est pas valide",
     passwordRequired: "Un mot de passe est requis",
     passwordTooShort: "Votre mot de passe doit comporter au moins 8 caractères",
     passwordTooLong: "Votre mot de passe ne peut pas dépasser 30 caractères",
