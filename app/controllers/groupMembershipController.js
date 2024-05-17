@@ -17,7 +17,7 @@ const createGroupMembership = async (req, res) => {
 
     try {
         if (!mongoose.Types.ObjectId.isValid(group_id)) {
-            return res.status(400).json({ error: LOCALE.invalidGroupId });
+            return res.status(400).json({ error: LOCALE.groupNotFound });
         }
 
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id, is_administrator: true });
@@ -62,6 +62,10 @@ const getGroupMembers = async (req, res) => {
     const groupId = req.params.id;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         const group = await Group.findById(groupId);
 
         if (!group) {
@@ -95,10 +99,24 @@ const deleteGroupMembership = async (req, res) => {
     const currentUserId = req.userId;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: LOCALE.userNotFound });
+        }
+
         const group = await Group.findById(groupId);
 
         if (!group) {
             return res.status(404).json({ error: LOCALE.groupNotFound });
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
         const membership = await GroupMembership.findOne({ user_id: userId, group_id: groupId });

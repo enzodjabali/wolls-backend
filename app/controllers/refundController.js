@@ -2,6 +2,8 @@ const Expense = require('../models/Expense');
 const GroupMembership = require("../models/GroupMembership");
 const LOCALE = require('../locales/fr-FR');
 
+const mongoose = require("mongoose");
+
 /**
  * Calculates refund recipients and their corresponding refund amounts for a given expense
  * @param {Object} expense The expense object containing amount and refund recipients
@@ -97,6 +99,10 @@ const getRefunds = async (req, res) => {
     const simplified = req.query.simplified === 'true';
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         const isMember = await GroupMembership.exists({ user_id: userId, group_id: groupId });
 
         if (!isMember) {
