@@ -8,6 +8,7 @@ const { createUserSchema, updateUserSchema } = require('../middlewares/validatio
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 
 /**
  * Registers a new user
@@ -392,6 +393,10 @@ const getUserById = async (req, res) => {
     const userId = req.params.id;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: LOCALE.invalidUserId });
+        }
+
         const user = await User.findById(userId);
 
         if (!user) {
