@@ -85,6 +85,10 @@ const getGroupById = async (req, res) => {
     const currentUserId = req.userId;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         const group = await Group.findById(groupId);
 
         if (!group) {
