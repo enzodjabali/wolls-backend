@@ -429,6 +429,18 @@ const getUserById = async (req, res) => {
             pseudonym: user.pseudonym
         };
 
+        if (user.firstname) {
+            userData.firstname = user.firstname;
+        }
+
+        if (user.lastname) {
+            userData.lastname = user.lastname;
+        }
+
+        if (user.iban) {
+            userData.iban = user.iban;
+        }
+
         if (user.ibanAttachment) {
             const bucketName = 'user-ibans';
             const fileName = user.ibanAttachment;
