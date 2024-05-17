@@ -6,6 +6,8 @@ const LOCALE = require('../locales/fr-FR');
 const minioClient = require('../middlewares/minioClient');
 const { createGroupSchema, updateGroupSchema} = require('../middlewares/validationSchema');
 
+const mongoose = require('mongoose');
+
 /**
  * Creates a new group
  * @param {Object} req The request object containing the group name and description in req.body, and the userId in req.userId
@@ -113,6 +115,10 @@ const updateGroupById = async (req, res) => {
     const currentUserId = req.userId;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         await updateGroupSchema.validateAsync(req.body, { abortEarly: false });
 
         const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId, is_administrator: true });
