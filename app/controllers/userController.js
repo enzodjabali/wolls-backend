@@ -323,7 +323,7 @@ const updateCurrentUserPassword = async (req, res) => {
         const { currentPassword, newPassword, confirmPassword } = req.body;
 
         if (!currentPassword || typeof currentPassword !== 'string') {
-            return res.status(400).json({ error: LOCALE.currentPasswordRequired });
+            return res.status(400).json({ error: LOCALE.wrongCurrentPassword });
         }
 
         if (!newPassword || !confirmPassword || typeof newPassword !== 'string' || typeof confirmPassword !== 'string') {
@@ -350,7 +350,7 @@ const updateCurrentUserPassword = async (req, res) => {
 
         await User.findByIdAndUpdate(req.userId, { password: hashedPassword });
 
-        res.status(200).send({ message: LOCALE.passwordSuccessfullyUpdated });
+        res.status(200).json({ message: LOCALE.passwordSuccessfullyUpdated });
     } catch (error) {
         console.error('Error updating the current user\'s password:', error);
         res.status(500).json({ error: LOCALE.internalServerError });

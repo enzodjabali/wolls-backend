@@ -26,6 +26,7 @@ module.exports = {
     accountSuccessfullyDeleted: "Votre compte a été supprimé avec succès",
     passwordSuccessfullyUpdated: "Votre mot de passe a été mis à jour avec succès",
     wrongCurrentPassword: "Votre mot de passe actuel est incorrect",
+    newPasswordRequired: "Your new password is required",
     userNotFound: "Nous n'avons pas pu trouver l'utilisateur",
     verificationCodeSentEmail: "Un code de vérification a été envoyé à votre adresse e-mail (vérifiez votre dossier de courrier indésirable)",
     invalidVerificationCodeOrEmail: "Le code de vérification ou l'adresse e-mail est invalide",

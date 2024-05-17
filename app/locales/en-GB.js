@@ -26,6 +26,7 @@ module.exports = {
     accountSuccessfullyDeleted: "Your account has been successfully deleted",
     passwordSuccessfullyUpdated: "Your password has been successfully updated",
     wrongCurrentPassword: "Your current password is incorrect",
+    newPasswordRequired: "Your new password is required",
     userNotFound: "We couldn't find the user",
     verificationCodeSentEmail: "A verification code was sent to your email (check your junk folder)",
     invalidVerificationCodeOrEmail: "The verification code or email is invalid",
