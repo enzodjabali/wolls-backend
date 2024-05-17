@@ -2,6 +2,8 @@ const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
 const LOCALE = require('../locales/fr-FR');
 
+const mongoose = require("mongoose");
+
 /**
  * Calculates the balances for each user in a group based on their expenses and refunds
  * @param {Object} req The request object containing parameters
@@ -12,6 +14,10 @@ const getBalances = async (req, res) => {
     const groupId = req.params.groupId;
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
         const expenses = await Expense.find({ group_id: groupId }).populate('refund_recipients');
         const groupMemberships = await GroupMembership.find({ group_id: groupId }).populate('user_id');
         const balances = {};
