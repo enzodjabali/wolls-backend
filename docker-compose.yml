@@ -5,6 +5,7 @@ services:
     image: node:${NODE_VERSION}
     ports:
       - '${APP_PORT}:3000'
+      - '3002:3002'
     command: 'npm start --prefix /app'
     volumes:
       - './app:/app'

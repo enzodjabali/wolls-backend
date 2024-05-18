@@ -47,3 +47,56 @@ APP.use('/v1/messages', messageRoutes);
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./docs/swagger.json');
 APP.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+
+
+
+
+
+
+
+const { io } = require('./socket');
+const Message = require('./models/message');
+
+io.on("connection", (socket) => {
+    console.log(`User Connected: ${socket.id}`);
+
+    socket.on("join_room", async (data) => {
+        try {
+            socket.join(data);
+            console.log(`User with ID: ${socket.id} joined room: ${data}`);
+            // Fetch all messages of the chat room from the database
+            // const messageHistory = await Message.find({ groupId: data });
+            // Send the message history to the user joining the room
+            // socket.emit("message_history", messageHistory);
+            // console.log(messageHistory);
+        } catch (err) {
+            console.error("Error fetching message history:", err);
+        }
+    });
+
+    socket.on("send_group_message", (data) => {
+        // Create an instance of the Message model with the message data
+        // const newMessage = new Message({
+        //     groupId: data.groupId,
+        //     senderId: data.senderId,
+        //     message: data.message,
+        // });
+        const messageData = {
+            groupId: data.groupId,
+            id: Math.random().toString(),
+            senderId: data.senderId,
+            content: data.content,
+        };
+        // Save the message in the database
+        // await newMessage.save();
+        io.to(data.groupId).emit("group_message", messageData);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("User Disconnected", socket.id);
+    });
+
+});
+
+
