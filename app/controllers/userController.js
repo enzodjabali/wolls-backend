@@ -181,6 +181,7 @@ const getCurrentUser = async (req, res) => {
             pseudonym: currentUser.pseudonym,
             email: currentUser.email,
             emailPaypal: currentUser.emailPaypal,
+            isGoogle: currentUser.isGoogle,
             iban: currentUser.iban,
             ibanAttachment: currentUser.ibanAttachment,
             picture: currentUser.picture
@@ -535,6 +536,8 @@ const getUserById = async (req, res) => {
             userData.iban = user.iban;
         }
 
+        userData.isGoogle = user.isGoogle;
+
         const fetchAttachment = async (bucketName, fileName) => {
             try {
                 const data = await minioClient.getObject(bucketName, fileName);
@@ -572,7 +575,6 @@ const getUserById = async (req, res) => {
                         content: base64Data
                     };
 
-                    // Check if the user is Google, and include the picture accordingly
                     if (user.isGoogle) {
                         userData.picture = user.picture;
                         res.status(200).json(userData);
@@ -594,7 +596,6 @@ const getUserById = async (req, res) => {
                 res.status(500).json({ error: LOCALE.internalServerError });
             });
         } else {
-            // Check if the user is Google, and include the picture accordingly
             if (user.isGoogle) {
                 userData.picture = user.picture;
                 res.status(200).json(userData);
@@ -637,7 +638,7 @@ const forgotPassword = async (req, res) => {
             return res.status(404).json({ error: LOCALE.emailDoesNotBelongToUser });
         }
 
-        const verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
         const forgotPasswordEntry = new ForgotPassword({
             email: email,
