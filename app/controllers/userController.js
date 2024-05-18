@@ -111,7 +111,7 @@ const authenticateUserWithGoogle = async (req, res) => {
         }
 
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf-8'));
-        const { email, name, given_name, family_name } = payload;
+        const { email, name, given_name, family_name, picture } = payload;
         const modifiedNameToPseudonym = (name.replace(/\s/g, '') + Math.floor(Math.random() * 10000).toString().padStart(4, '0')).toLowerCase();
         let user = await User.findOne({ email });
 
@@ -122,13 +122,15 @@ const authenticateUserWithGoogle = async (req, res) => {
                 pseudonym: modifiedNameToPseudonym,
                 email: email,
                 password: '',
-                isGoogle: true
+                isGoogle: true,
+                picture: picture
             });
             user = await newUser.save();
         } else {
-            if (given_name !== user.firstname || family_name !== user.lastname) {
+            if (given_name !== user.firstname || family_name !== user.lastname || picture !== user.picture) {
                 user.firstname = given_name;
                 user.lastname = family_name;
+                user.picture = picture;
                 await user.save();
             }
         }
@@ -179,40 +181,41 @@ const getCurrentUser = async (req, res) => {
             pseudonym: currentUser.pseudonym,
             email: currentUser.email,
             emailPaypal: currentUser.emailPaypal,
+            isGoogle: currentUser.isGoogle,
             iban: currentUser.iban,
-            ibanAttachment: currentUser.ibanAttachment
+            ibanAttachment: currentUser.ibanAttachment,
+            picture: currentUser.picture
+        };
+
+        const fetchAttachment = async (bucketName, fileName) => {
+            try {
+                const data = await minioClient.getObject(bucketName, fileName);
+                const chunks = [];
+                for await (const chunk of data) {
+                    chunks.push(chunk);
+                }
+                const concatenatedBuffer = Buffer.concat(chunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+                return { fileName, content: base64Data };
+            } catch (error) {
+                console.error(`Error fetching ${bucketName} attachment:`, error);
+                throw error;
+            }
         };
 
         if (currentUser.ibanAttachment) {
-            const bucketName = 'user-ibans';
-            const fileName = currentUser.ibanAttachment;
-
-            const dataChunks = [];
-            const dataStream = await minioClient.getObject(bucketName, fileName);
-
-            dataStream.on('data', function (chunk) {
-                dataChunks.push(chunk);
-            });
-
-            dataStream.on('end', function () {
-                const concatenatedBuffer = Buffer.concat(dataChunks);
-                const base64Data = concatenatedBuffer.toString('base64');
-
-                userData.ibanAttachment = {
-                    fileName,
-                    content: base64Data
-                };
-
-                res.status(200).json(userData);
-            });
-
-            dataStream.on('error', function (err) {
-                console.error('Error fetching the user iban attachment:', error);
-                res.status(500).json({ error: LOCALE.internalServerError });
-            });
-        } else {
-            res.status(200).json(userData);
+            userData.ibanAttachment = await fetchAttachment('user-ibans', currentUser.ibanAttachment);
         }
+
+        if (currentUser.isGoogle) {
+            userData.picture = currentUser.picture;
+        } else {
+            if (currentUser.picture) {
+                userData.picture = await fetchAttachment('user-pictures', currentUser.picture);
+            }
+        }
+
+        res.status(200).json(userData);
     } catch (error) {
         console.error('Error fetching the current user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
@@ -232,8 +235,22 @@ const updateCurrentUser = async (req, res) => {
         delete req.body.password;
         delete req.body.confirmPassword;
 
-        const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email'];
-        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment'];
+        if (req.body.email && req.body.email !== currentUser.email) {
+            const emailExists = await User.exists({ email: req.body.email });
+            if (emailExists) {
+                return res.status(400).json({ error: LOCALE.emailAlreadyExists });
+            }
+        }
+
+        if (req.body.pseudonym && req.body.pseudonym !== currentUser.pseudonym) {
+            const pseudonymExists = await User.exists({ pseudonym: req.body.pseudonym });
+            if (pseudonymExists) {
+                return res.status(400).json({ error: LOCALE.pseudonymAlreadyExists });
+            }
+        }
+
+        const forbiddenFieldsForGoogleUsers = ['firstname', 'lastname', 'pseudonym', 'email', 'picture'];
+        const allowedFields = ['firstname', 'lastname', 'pseudonym', 'email', 'emailPaypal', 'iban', 'ibanAttachment', 'picture'];
 
         if (currentUser && currentUser.isGoogle) {
             const forbiddenFields = [];
@@ -296,10 +313,53 @@ const updateCurrentUser = async (req, res) => {
             req.body.ibanAttachment = fileName;
         }
 
+        if (req.body.picture) {
+            const pictureData = req.body.picture;
+
+            if (!pictureData || !pictureData.filename || !pictureData.content) {
+                return res.status(400).json({ error: LOCALE.pictureMalformed });
+            }
+
+            const decodedFileContent = Buffer.from(pictureData.content, 'base64');
+            const supportedFormats = ['image/png', 'image/jpeg', 'image/jpg'];
+
+            const isSupportedFormat = supportedFormats.some(format => pictureData.filename.endsWith(format.replace('image/', '.')));
+            if (!isSupportedFormat) {
+                return res.status(400).json({ error: LOCALE.pictureWrongFormat });
+            }
+
+            if (currentUser.picture) {
+                const bucketName = 'user-pictures';
+                const existingFileName = currentUser.picture;
+                try {
+                    await minioClient.removeObject(bucketName, existingFileName);
+                } catch (deleteError) {
+                    console.error('Error deleting existing picture from S3:', deleteError);
+                    return res.status(500).json({ error: LOCALE.internalServerError });
+                }
+            }
+
+            const bucketName = 'user-pictures';
+            const fileExtension = pictureData.filename.split('.').pop().toLowerCase();
+            const fileName = `${uuidv4()}.${fileExtension}`;
+            const metaData = {
+                'Content-Type': pictureData.contentType
+            };
+
+            try {
+                await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
+            } catch (uploadError) {
+                console.error('Error uploading picture to S3:', uploadError);
+                return res.status(500).json({ error: LOCALE.internalServerError });
+            }
+
+            req.body.picture = fileName;
+        }
+
         const updatedUser = await User.findByIdAndUpdate(req.userId, req.body);
 
         if (updatedUser) {
-            res.status(200).send(updatedUser);
+            res.status(200).send(await User.findById(req.userId));
         } else {
             res.status(404).json({ error: LOCALE.userNotFound });
         }
@@ -386,6 +446,22 @@ const deleteCurrentUser = async (req, res) => {
         const userId = req.userId;
         const user = await User.findById(userId);
 
+        if (!user) {
+            return res.status(404).json({ error: LOCALE.userNotFound });
+        }
+
+        if (!user.isGoogle && user.picture) {
+            const bucketName = 'user-pictures';
+            const fileName = user.picture;
+
+            try {
+                await minioClient.removeObject(bucketName, fileName);
+            } catch (deleteError) {
+                console.error('Error deleting picture from S3:', deleteError);
+                res.status(500).json({ error: LOCALE.internalServerError });
+            }
+        }
+
         if (user.ibanAttachment) {
             const bucketName = 'user-ibans';
             const fileName = user.ibanAttachment;
@@ -460,6 +536,24 @@ const getUserById = async (req, res) => {
             userData.iban = user.iban;
         }
 
+        userData.isGoogle = user.isGoogle;
+
+        const fetchAttachment = async (bucketName, fileName) => {
+            try {
+                const data = await minioClient.getObject(bucketName, fileName);
+                const chunks = [];
+                for await (const chunk of data) {
+                    chunks.push(chunk);
+                }
+                const concatenatedBuffer = Buffer.concat(chunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+                return { fileName, content: base64Data };
+            } catch (error) {
+                console.error(`Error fetching ${bucketName} attachment:`, error);
+                throw error;
+            }
+        };
+
         if (user.ibanAttachment) {
             const bucketName = 'user-ibans';
             const fileName = user.ibanAttachment;
@@ -467,28 +561,51 @@ const getUserById = async (req, res) => {
             const dataChunks = [];
             const dataStream = await minioClient.getObject(bucketName, fileName);
 
-            dataStream.on('data', function (chunk) {
+            dataStream.on('data', async function (chunk) {
                 dataChunks.push(chunk);
             });
 
-            dataStream.on('end', function () {
-                const concatenatedBuffer = Buffer.concat(dataChunks);
-                const base64Data = concatenatedBuffer.toString('base64');
+            dataStream.on('end', async function () {
+                try {
+                    const concatenatedBuffer = Buffer.concat(dataChunks);
+                    const base64Data = concatenatedBuffer.toString('base64');
 
-                userData.ibanAttachment = {
-                    fileName,
-                    content: base64Data
-                };
+                    userData.ibanAttachment = {
+                        fileName,
+                        content: base64Data
+                    };
 
-                res.status(200).json(userData);
+                    if (user.isGoogle) {
+                        userData.picture = user.picture;
+                        res.status(200).json(userData);
+                    } else {
+                        if (user.picture) {
+                            const pictureData = await fetchAttachment('user-pictures', user.picture);
+                            userData.picture = pictureData;
+                        }
+                        res.status(200).json(userData);
+                    }
+                } catch (error) {
+                    console.error('Error processing user data:', error);
+                    res.status(500).json({ error: LOCALE.internalServerError });
+                }
             });
 
-            dataStream.on('error', function (err) {
+            dataStream.on('error', async function (err) {
                 console.error('Error fetching the user IBAN attachment:', err);
                 res.status(500).json({ error: LOCALE.internalServerError });
             });
         } else {
-            res.status(200).json(userData);
+            if (user.isGoogle) {
+                userData.picture = user.picture;
+                res.status(200).json(userData);
+            } else {
+                if (user.picture) {
+                    const pictureData = await fetchAttachment('user-pictures', user.picture);
+                    userData.picture = pictureData;
+                }
+                res.status(200).json(userData);
+            }
         }
     } catch (error) {
         console.error('Error fetching the user:', error);
@@ -521,7 +638,7 @@ const forgotPassword = async (req, res) => {
             return res.status(404).json({ error: LOCALE.emailDoesNotBelongToUser });
         }
 
-        const verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
         const forgotPasswordEntry = new ForgotPassword({
             email: email,

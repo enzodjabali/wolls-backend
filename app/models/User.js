@@ -12,6 +12,7 @@ const userSchema = new Schema({
     },
     pseudonym: {
         type: String,
+        unique: true,
         required: true
     },
     email: {
@@ -36,6 +37,10 @@ const userSchema = new Schema({
         required: false
     },
     ibanAttachment: {
+        type: String,
+        required: false
+    },
+    picture: {
         type: String,
         required: false
     }
