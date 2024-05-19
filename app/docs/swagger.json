@@ -488,7 +488,7 @@
         }
       }
     },
-    "/v1/users/me": {
+    "/v1/users/me?simplified=false": {
       "get": {
         "tags": ["Users"],
         "description": "Get current user",

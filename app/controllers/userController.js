@@ -83,7 +83,7 @@ const authenticateUser = async (req, res) => {
             return res.status(401).json({ error: LOCALE.wrongPasswordOrPseudonym });
         }
 
-        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '7h' });
         res.status(200).json({ token });
     } catch (error) {
         console.error('Error logging in the user:', error);
@@ -135,7 +135,7 @@ const authenticateUserWithGoogle = async (req, res) => {
             }
         }
 
-        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '7h' });
         res.status(200).json({ token });
     } catch (error) {
         console.error('Error logging in user with google:', error);
@@ -174,44 +174,58 @@ const getCurrentUser = async (req, res) => {
             return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
-        const userData = {
-            _id: currentUser._id,
-            firstname: currentUser.firstname,
-            lastname: currentUser.lastname,
-            pseudonym: currentUser.pseudonym,
-            email: currentUser.email,
-            emailPaypal: currentUser.emailPaypal,
-            isGoogle: currentUser.isGoogle,
-            iban: currentUser.iban,
-            ibanAttachment: currentUser.ibanAttachment,
-            picture: currentUser.picture
-        };
+        const simplified = req.query.simplified === 'true';
 
-        const fetchAttachment = async (bucketName, fileName) => {
-            try {
-                const data = await minioClient.getObject(bucketName, fileName);
-                const chunks = [];
-                for await (const chunk of data) {
-                    chunks.push(chunk);
-                }
-                const concatenatedBuffer = Buffer.concat(chunks);
-                const base64Data = concatenatedBuffer.toString('base64');
-                return { fileName, content: base64Data };
-            } catch (error) {
-                console.error(`Error fetching ${bucketName} attachment:`, error);
-                throw error;
-            }
-        };
+        let userData;
 
-        if (currentUser.ibanAttachment) {
-            userData.ibanAttachment = await fetchAttachment('user-ibans', currentUser.ibanAttachment);
-        }
-
-        if (currentUser.isGoogle) {
-            userData.picture = currentUser.picture;
+        if (simplified) {
+            userData = {
+                _id: currentUser._id,
+                pseudonym: currentUser.pseudonym,
+                firstname: currentUser.firstname,
+                lastname: currentUser.lastname,
+                email: currentUser.email
+            };
         } else {
-            if (currentUser.picture) {
-                userData.picture = await fetchAttachment('user-pictures', currentUser.picture);
+            userData = {
+                _id: currentUser._id,
+                firstname: currentUser.firstname,
+                lastname: currentUser.lastname,
+                pseudonym: currentUser.pseudonym,
+                email: currentUser.email,
+                emailPaypal: currentUser.emailPaypal,
+                isGoogle: currentUser.isGoogle,
+                iban: currentUser.iban,
+                ibanAttachment: currentUser.ibanAttachment,
+                picture: currentUser.picture
+            };
+
+            const fetchAttachment = async (bucketName, fileName) => {
+                try {
+                    const data = await minioClient.getObject(bucketName, fileName);
+                    const chunks = [];
+                    for await (const chunk of data) {
+                        chunks.push(chunk);
+                    }
+                    const concatenatedBuffer = Buffer.concat(chunks);
+                    const base64Data = concatenatedBuffer.toString('base64');
+                    return { fileName, content: base64Data };
+                } catch (error) {
+                    console.error(`Error fetching ${bucketName} attachment:`, error);
+                    throw error;
+                }
+            };
+
+            if (currentUser.ibanAttachment) {
+                userData.ibanAttachment = await fetchAttachment('user-ibans', currentUser.ibanAttachment);
+            }
+
+            if (currentUser.isGoogle) {
+                userData.picture = currentUser.picture;
+            } else {
+                if (currentUser.picture) {
+                    userData.picture = await fetchAttachment('user-pictures', currentUser.picture);
+                }
             }
         }
 
@@ -221,6 +235,8 @@ const getCurrentUser = async (req, res) => {
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
+
+module.exports = { getCurrentUser };
 
 /**
  * Updates the details of the current user
