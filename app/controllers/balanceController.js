@@ -18,7 +18,7 @@ const getBalances = async (req, res) => {
             return res.status(400).json({ error: LOCALE.groupNotFound });
         }
 
-        const expenses = await Expense.find({ group_id: groupId }).populate('refund_recipients');
+        const expenses = await Expense.find({ group_id: groupId, isRefunded: false }).populate('refund_recipients');
         const groupMemberships = await GroupMembership.find({ group_id: groupId }).populate('user_id');
         const balances = {};
 

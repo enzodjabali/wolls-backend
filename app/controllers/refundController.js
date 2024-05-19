@@ -34,14 +34,16 @@ const calculateRefunds = (expenses) => {
     const refunds = [];
 
     expenses.forEach((expense) => {
-        const refundRecipients = getRefundRecipients(expense);
+        if (!expense.isRefunded) {
+            const refundRecipients = getRefundRecipients(expense);
 
-        refunds.push({
-            expense_id: expense._id,
-            group_id: expense.group_id,
-            creator_id: expense.creator_id,
-            refund_recipients: refundRecipients
-        });
+            refunds.push({
+                expense_id: expense._id,
+                group_id: expense.group_id,
+                creator_id: expense.creator_id,
+                refund_recipients: refundRecipients
+            });
+        }
     });
 
     return refunds;
@@ -56,21 +58,23 @@ const calculateRefundsSimplified = (expenses) => {
     const refunds = {};
 
     expenses.forEach((expense) => {
-        const { creator_id, refund_recipients, amount } = expense;
-        const numRecipients = refund_recipients.length;
+        if (!expense.isRefunded) {
+            const { creator_id, refund_recipients, amount } = expense;
+            const numRecipients = refund_recipients.length;
 
-        const refundAmountPerRecipient = amount / numRecipients;
+            const refundAmountPerRecipient = amount / numRecipients;
 
-        refund_recipients.forEach(recipient => {
-            if (!refunds[creator_id]) {
-                refunds[creator_id] = {};
-            }
-            if (!refunds[creator_id][recipient]) {
-                refunds[creator_id][recipient] = 0;
-            }
+            refund_recipients.forEach(recipient => {
+                if (!refunds[creator_id]) {
+                    refunds[creator_id] = {};
+                }
+                if (!refunds[creator_id][recipient]) {
+                    refunds[creator_id][recipient] = 0;
+                }
 
-            refunds[creator_id][recipient] += refundAmountPerRecipient;
-        });
+                refunds[creator_id][recipient] += refundAmountPerRecipient;
+            });
+        }
     });
 
     const refundsArray = [];

@@ -191,7 +191,7 @@ const updateExpense = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notAllowedToEditExpense });
         }
 
-        const allowedFields = ['title', 'amount', 'category', 'refund_recipients', 'attachment'];
+        const allowedFields = ['title', 'amount', 'category', 'refund_recipients', 'attachment', 'isRefunded'];
         Object.keys(req.body).forEach(key => {
             if (!allowedFields.includes(key)) {
                 delete req.body[key];

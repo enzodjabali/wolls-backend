@@ -35,6 +35,10 @@ const expenseSchema = new Schema({
     attachment: {
         type: String,
         required: false
+    },
+    isRefunded: {
+        type: Boolean,
+        default: false
     }
 });
 
