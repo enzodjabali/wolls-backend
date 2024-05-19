@@ -19,22 +19,26 @@ const getBalances = async (req, res) => {
         }
 
         const expenses = await Expense.find({ group_id: groupId, isRefunded: false }).populate('refund_recipients');
-        const groupMemberships = await GroupMembership.find({ group_id: groupId }).populate('user_id');
-        const balances = {};
 
+        const groupMemberships = await GroupMembership.find({ group_id: groupId }).populate('user_id');
+
+        const balances = {};
         groupMemberships.forEach(membership => {
-            const userId = membership.user_id._id;
+            const userId = membership.user_id._id.toString();
             balances[userId] = 0;
         });
 
         expenses.forEach(expense => {
-            const buyer = expense.creator_id;
-            const receivers = expense.refund_recipients;
-            balances[buyer] += expense.amount;
+            const buyerId = expense.creator_id.toString();
+            const receivers = expense.refund_recipients.map(recipient => recipient._id.toString());
             const splitAmount = expense.amount / receivers.length;
 
-            receivers.forEach(receiver => {
-                balances[receiver._id] -= splitAmount;
+            if (!balances[buyerId]) balances[buyerId] = 0;
+            balances[buyerId] += expense.amount;
+
+            receivers.forEach(receiverId => {
+                if (!balances[receiverId]) balances[receiverId] = 0;
+                balances[receiverId] -= splitAmount;
             });
         });
 
