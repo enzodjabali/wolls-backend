@@ -1283,6 +1283,10 @@
               "example": "iVBORw0KGgoAAAAN...AAAAElFTkSuQmCC"
             }
           }
+        },
+        "isRefunded": {
+          "type": "boolean",
+          "example": false
         }
       }
     },

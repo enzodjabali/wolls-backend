@@ -136,7 +136,8 @@ const createExpenseSchema = Joi.object({
     refund_recipients: Joi.array().items(Joi.string()).required().messages({
         'any.required': LOCALE.expenseRefundRecipientsRequired,
     }),
-    attachment: Joi.any()
+    attachment: Joi.any(),
+    isRefunded: Joi.boolean()
 });
 
 const updateExpenseSchema = Joi.object({
@@ -155,7 +156,8 @@ const updateExpenseSchema = Joi.object({
         'string.max': LOCALE.expenseCategoryTooLong,
     }),
     refund_recipients: Joi.array().items(Joi.string()),
-    attachment: Joi.any()
+    attachment: Joi.any(),
+    isRefunded: Joi.boolean()
 });
 
 //////////////////////////////////////////////////////////////////////
