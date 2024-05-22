@@ -28,9 +28,20 @@ const getExpenses = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notAllowedToViewGroupExpenses });
         }
 
-        const expenses = await Expense.find({ group_id: groupId }).select('-attachment');
+        const expenses = await Expense.find({ group_id: groupId }).populate({
+            path: 'creator_id',
+            select: 'pseudonym'
+        }).select('-attachment');
 
-        res.status(200).json(expenses);
+        // Transform the expenses array to include creator_pseudonym field
+        const transformedExpenses = expenses.map(expense => {
+            return {
+                ...expense.toObject(),
+                creator_pseudonym: expense.creator_id.pseudonym
+            };
+        });
+
+        res.status(200).json(transformedExpenses);
     } catch (error) {
         console.error('Error fetching the expenses:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
