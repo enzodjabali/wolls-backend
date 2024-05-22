@@ -37,6 +37,7 @@ const getExpenses = async (req, res) => {
         const transformedExpenses = expenses.map(expense => {
             return {
                 ...expense.toObject(),
+                creator_id: expense.creator_id._id,
                 creator_pseudonym: expense.creator_id.pseudonym
             };
         });
