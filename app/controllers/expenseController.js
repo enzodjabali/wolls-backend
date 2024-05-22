@@ -28,7 +28,10 @@ const getExpenses = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notAllowedToViewGroupExpenses });
         }
 
-        const expenses = await Expense.find({ group_id: groupId }).select('-attachment');
+        const expenses = await Expense.find({ group_id: groupId }).populate({
+            path: 'creator_id',
+            select: '_id pseudonym'
+        }).select('-attachment');
 
         res.status(200).json(expenses);
     } catch (error) {
