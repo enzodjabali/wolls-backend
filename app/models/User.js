@@ -34,7 +34,8 @@ const userSchema = new Schema({
     },
     iban: {
         type: String,
-        required: false
+        required: false,
+        default: ""
     },
     ibanAttachment: {
         type: String,
