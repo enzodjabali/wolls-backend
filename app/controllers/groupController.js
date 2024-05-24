@@ -18,7 +18,7 @@ const createGroup = async (req, res) => {
     try {
         await createGroupSchema.validateAsync(req.body);
 
-        const { name, description } = req.body;
+        const { name, description, invited_users = [] } = req.body;
         const currentUser = await User.findOne({ _id: req.userId });
 
         if (!currentUser) {
@@ -40,6 +40,27 @@ const createGroup = async (req, res) => {
         });
 
         await groupMembership.save();
+
+        for (const pseudonym of invited_users) {
+            const user = await User.findOne({ pseudonym });
+
+            if (user) {
+                const existingMembership = await GroupMembership.findOne({
+                    user_id: user._id,
+                    group_id: savedGroup._id,
+                });
+
+                if (!existingMembership) {
+                    const newMembership = new GroupMembership({
+                        user_id: user._id,
+                        group_id: savedGroup._id,
+                        has_accepted_invitation: false
+                    });
+
+                    await newMembership.save();
+                }
+            }
+        }
 
         res.status(201).json(savedGroup);
     } catch (error) {

@@ -67,7 +67,7 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/GroupRequestBody"
+              "$ref": "#/definitions/CreateGroupRequestBody"
             }
           }
         ],
@@ -1076,6 +1076,26 @@
         "description": {
           "type": "string",
           "example": "A description of my group"
+        }
+      }
+    },
+    "CreateGroupRequestBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "My Group"
+        },
+        "description": {
+          "type": "string",
+          "example": "A description of my group"
+        },
+        "invited_users": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": ["user1", "user2"]
+          }
         }
       }
     },
