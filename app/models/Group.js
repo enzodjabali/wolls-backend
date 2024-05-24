@@ -8,7 +8,11 @@ const groupSchema = new Schema({
     },
     description: {
         type: String
-    }
+    },
+    theme: {
+        type: String,
+        required: true
+    },
 });
 
 const Group = mongoose.model('Group', groupSchema);

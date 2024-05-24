@@ -25,9 +25,13 @@ const createGroup = async (req, res) => {
             return res.status(404).json({ error: LOCALE.notConnected });
         }
 
+        const themes = ['city', 'desert', 'forest'];
+        const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+
         const newGroup = new Group({
             name,
             description,
+            theme: randomTheme,
         });
 
         const savedGroup = await newGroup.save();
