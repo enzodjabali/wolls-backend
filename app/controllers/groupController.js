@@ -208,6 +208,7 @@ const deleteGroupById = async (req, res) => {
         }
 
         await Expense.deleteMany({ group_id: groupId });
+        await GroupMembership.deleteMany({ group_id: groupId });
         await Group.findByIdAndDelete(groupId);
 
         res.status(200).json({ message: LOCALE.groupSuccessfullyDeleted });
