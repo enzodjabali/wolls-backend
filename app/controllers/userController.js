@@ -83,7 +83,7 @@ const authenticateUser = async (req, res) => {
             return res.status(401).json({ error: LOCALE.wrongPasswordOrPseudonym });
         }
 
-        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '7h' });
+        const token = jwt.sign({ userId: user._id }, 'secret_key');
         res.status(200).json({ token });
     } catch (error) {
         console.error('Error logging in the user:', error);
@@ -135,7 +135,7 @@ const authenticateUserWithGoogle = async (req, res) => {
             }
         }
 
-        const token = jwt.sign({ userId: user._id }, 'secret_key', { expiresIn: '7h' });
+        const token = jwt.sign({ userId: user._id }, 'secret_key');
         res.status(200).json({ token });
     } catch (error) {
         console.error('Error logging in user with google:', error);
