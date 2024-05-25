@@ -200,4 +200,22 @@ const manageInvitation = async (req, res) => {
     }
 };
 
-module.exports = { createGroupMembership, getGroupMembers, deleteGroupMembership, getInvitations, manageInvitation };
+/**
+ * Retrieves the number of invitations for the current user
+ * @param {Object} req The request object containing the user ID in req.userId
+ * @param {Object} res The response object to send the number of invitations or an error response
+ * @returns {Object} Returns the number of invitations for the current user or an error response if unable to fetch invitations
+ */
+const getInvitationCount = async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        const invitationCount = await GroupMembership.countDocuments({ user_id: userId, has_accepted_invitation: false });
+        res.status(200).json({ invitationCount });
+    } catch (error) {
+        console.error('Error fetching the invitation count:', error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
+};
+
+module.exports = { createGroupMembership, getGroupMembers, deleteGroupMembership, getInvitations, manageInvitation, getInvitationCount };

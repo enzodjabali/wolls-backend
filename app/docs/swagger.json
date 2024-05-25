@@ -290,6 +290,30 @@
         }
       }
     },
+    "/v1/groups/memberships/invitations/count": {
+      "get": {
+        "tags": ["Group Memberships"],
+        "description": "Get the invitations count of the current user",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/v1/groups/memberships/{groupId}/members": {
       "get": {
         "tags": ["Group Memberships"],
