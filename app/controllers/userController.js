@@ -144,19 +144,21 @@ const authenticateUserWithGoogle = async (req, res) => {
 };
 
 /**
- * Retrieves a list of users containing their IDs and pseudonyms
+ * Retrieves a list of users containing their IDs and pseudonyms, excluding the current user
  * @param {Object} req The request object
  * @param {Object} res The response object to send the list of users or an error response
  * @returns {Object} Returns a list of users if successful, otherwise returns an error response
  */
 const getUsersList = async (req, res) => {
-    User.find({}, '_id pseudonym')
+    const currentUserId = req.userId;
+
+    User.find({ _id: { $ne: currentUserId } }, '_id pseudonym')
         .then(result => {
             res.status(200).json(result);
         })
-        .catch(err => {
+        .catch(error => {
             console.error('Error fetching the users:', error);
-            res.status(500).json({ error: LOCALE.internalServerError })
+            res.status(500).json({ error: LOCALE.internalServerError });
         });
 };
 
