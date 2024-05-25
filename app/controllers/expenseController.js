@@ -28,10 +28,14 @@ const getExpenses = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notAllowedToViewGroupExpenses });
         }
 
-        const expenses = await Expense.find({ group_id: groupId }).populate({
-            path: 'creator_id',
-            select: 'pseudonym'
-        }).select('-attachment');
+        // Retrieve expenses sorted by date in descending order
+        const expenses = await Expense.find({ group_id: groupId })
+            .sort({ date: -1 }) // Sort by date in descending order
+            .populate({
+                path: 'creator_id',
+                select: 'pseudonym'
+            })
+            .select('-attachment');
 
         // Transform the expenses array to include creator_pseudonym field
         const transformedExpenses = expenses.map(expense => {
