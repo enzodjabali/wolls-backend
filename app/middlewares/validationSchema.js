@@ -1,5 +1,5 @@
 const Joi = require('@hapi/joi');
-const LOCALE = require('../locales/fr-FR');
+const LOCALE = require('../locales/en-GB');
 
 //////////////////////////////////////////////////////////////////////
 //                             User                                 //

@@ -2,7 +2,7 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const Group = require('../models/Group');
 const GroupMembership = require('../models/GroupMembership');
-const LOCALE = require('../locales/fr-FR');
+const LOCALE = require('../locales/en-GB');
 const { sendPrivateMessageSchema, sendGroupMessageSchema } = require('../middlewares/validationSchema');
 
 const mongoose = require('mongoose');

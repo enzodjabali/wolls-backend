@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const ForgotPassword = require('../models/ForgotPassword');
 const GroupMembership = require('../models/GroupMembership');
-const LOCALE = require('../locales/fr-FR');
+const LOCALE = require('../locales/en-GB');
 const sendEmail = require('../middlewares/sendEmail');
 const minioClient = require('../middlewares/minioClient');
 const { createUserSchema, updateUserSchema } = require('../middlewares/validationSchema');

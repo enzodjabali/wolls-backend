@@ -1,6 +1,6 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
-const LOCALE = require('../locales/fr-FR');
+const LOCALE = require('../locales/en-GB');
 
 const mongoose = require("mongoose");
 

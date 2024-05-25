@@ -2,7 +2,7 @@ const Group = require('../models/Group');
 const User = require('../models/User');
 const Expense = require('../models/Expense');
 const GroupMembership = require("../models/GroupMembership");
-const LOCALE = require('../locales/fr-FR');
+const LOCALE = require('../locales/en-GB');
 const minioClient = require('../middlewares/minioClient');
 const { createGroupSchema, updateGroupSchema} = require('../middlewares/validationSchema');
 
