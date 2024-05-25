@@ -54,12 +54,13 @@ const createGroupMembership = async (req, res) => {
 
 /**
  * Retrieves members of a group identified by groupId
- * @param {Object} req The request object containing the groupId in req.params.id
+ * @param {Object} req The request object containing the groupId in req.params.id and the userId in req.userId
  * @param {Object} res The response object to send the group members or an error response
  * @returns {Object} Returns the group members if successful, otherwise returns an error response
  */
 const getGroupMembers = async (req, res) => {
     const groupId = req.params.id;
+    const currentUserId = req.userId;
 
     try {
         if (!mongoose.Types.ObjectId.isValid(groupId)) {
@@ -78,10 +79,23 @@ const getGroupMembers = async (req, res) => {
         const groupMembers = await Promise.all(userIds.map(async userId => {
             const user = await User.findById(userId).select('_id pseudonym firstname lastname');
             const groupMembership = groupMemberships.find(membership => membership.user_id.toString() === userId.toString());
-            return { _id: user._id, pseudonym: user.pseudonym, firstname: user.firstname, lastname: user.lastname, is_administrator: groupMembership.is_administrator, has_accepted_invitation: groupMembership.has_accepted_invitation };
+            return {
+                _id: user._id,
+                pseudonym: user.pseudonym,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                is_administrator: groupMembership.is_administrator,
+                has_accepted_invitation: groupMembership.has_accepted_invitation
+            };
         }));
 
-        res.status(200).json(groupMembers);
+        const sortedGroupMembers = groupMembers.sort((a, b) => {
+            if (a._id.toString() === currentUserId.toString()) return -1;
+            if (b._id.toString() === currentUserId.toString()) return 1;
+            return 0;
+        });
+
+        res.status(200).json(sortedGroupMembers);
     } catch (error) {
         console.error('Error fetching the group members:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
