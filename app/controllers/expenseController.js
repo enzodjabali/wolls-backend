@@ -292,4 +292,47 @@ const deleteExpense = async (req, res) => {
     }
 };
 
-module.exports = { getExpenses, getExpense, createExpense, updateExpense, deleteExpense };
+/**
+ * Deletes the attachment of an expense if the current user is the creator of the expense
+ * @param {Object} req The request object containing the expense ID in req.params.id and the userId in req.userId
+ * @param {Object} res The response object to send the success message or an error response
+ * @returns {Object} Returns a success message if the attachment is successfully deleted, otherwise returns an error response
+ */
+const deleteExpenseAttachment = async (req, res) => {
+    const expenseId = req.params.id;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(expenseId)) {
+            return res.status(400).json({ error: LOCALE.expenseNotFound });
+        }
+
+        let expense = await Expense.findById(expenseId);
+
+        if (!expense) {
+            return res.status(404).json({ error: LOCALE.expenseNotFound });
+        }
+
+        if (expense.creator_id != req.userId) {
+            return res.status(403).json({ error: LOCALE.notAllowedToRemoveAttachment });
+        }
+
+        if (!expense.attachment) {
+            return res.status(400).json({ error: LOCALE.noAttachmentFound });
+        }
+
+        // Delete attachment from S3
+        const bucketName = 'expense-attachments';
+        await minioClient.removeObject(bucketName, expense.attachment);
+
+        // Update expense document to remove attachment
+        expense.attachment = null;
+        await expense.save();
+
+        res.status(200).json({ message: LOCALE.expenseAttachmentSuccessfullyDeleted });
+    } catch (error) {
+        console.error('Error deleting the expense attachment:', error);
+        res.status(500).json({ message: LOCALE.internalServerError });
+    }
+};
+
+module.exports = { getExpenses, getExpense, createExpense, updateExpense, deleteExpense, deleteExpenseAttachment };
