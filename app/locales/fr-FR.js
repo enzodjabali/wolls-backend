@@ -82,7 +82,7 @@ module.exports = {
     expenseGroupIdRequired: "L'identifiant du groupe de dépenses est requis",
     expenseCategoryNotEmpty: "La catégorie de dépenses ne doit pas être vide",
     expenseCategoryTooShort: "La catégorie de dépenses doit comporter au moins 2 caractères",
-    expenseCategoryTooLong: "La catégorie de dépenses ne peut pas dépasser 15 caractères",
+    expenseCategoryTooLong: "La catégorie de dépenses ne peut pas dépasser 20 caractères",
     expenseRefundRecipientsRequired: "La valeur des destinataires du remboursement est requise",
     expenseSuccessfullyDeleted: "La dépense a été supprimée avec succès",
     notAllowedToViewExpenseDetails: "Vous n'êtes pas autorisé à afficher cette dépense",

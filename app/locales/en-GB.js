@@ -82,7 +82,7 @@ module.exports = {
     expenseGroupIdRequired: "The expense group id is required",
     expenseCategoryNotEmpty: "The expense category must not be empty",
     expenseCategoryTooShort: "The expense category must have at least 2 characters",
-    expenseCategoryTooLong: "The expense category can't be over 15 characters",
+    expenseCategoryTooLong: "The expense category can't be over 20 characters",
     expenseRefundRecipientsRequired: "The refund recipients value is required",
     expenseSuccessfullyDeleted: "The expense was successfully deleted",
     notAllowedToViewExpenseDetails: "You are not allowed to view this expense",

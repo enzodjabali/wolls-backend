@@ -128,7 +128,7 @@ const createExpenseSchema = Joi.object({
     group_id: Joi.string().required().messages({
         'any.required': LOCALE.expenseGroupIdRequired,
     }),
-    category: Joi.string().min(2).max(15).messages({
+    category: Joi.string().min(2).max(20).messages({
         'string.empty': LOCALE.expenseCategoryNotEmpty,
         'string.min': LOCALE.expenseCategoryTooShort,
         'string.max': LOCALE.expenseCategoryTooLong,
@@ -150,7 +150,7 @@ const updateExpenseSchema = Joi.object({
         'number.min': LOCALE.expenseAmountTooLow,
     }),
     group_id: Joi.string(),
-    category: Joi.string().min(2).max(15).messages({
+    category: Joi.string().min(2).max(30).messages({
         'string.empty': LOCALE.expenseCategoryNotEmpty,
         'string.min': LOCALE.expenseCategoryTooShort,
         'string.max': LOCALE.expenseCategoryTooLong,
