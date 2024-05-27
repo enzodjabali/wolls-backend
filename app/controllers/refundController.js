@@ -1,13 +1,13 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require("../models/GroupMembership");
-const User = require('../models/User');
+const User = require('../models/User'); // Import User model
 const LOCALE = require('../locales/en-GB');
 const mongoose = require("mongoose");
 
 /**
  * Calculates refund recipients and their corresponding refund amounts for a given expense
  * @param {Object} expense The expense object containing amount and refund recipients
- * @returns {Array} Returns an array of refund objects containing recipient ID and refund amount
+ * @returns {Array} Returns an array of refund objects containing recipient pseudonym and refund amount
  */
 const getRefundRecipients = async (expense) => {
     const { amount, refund_recipients } = expense;
@@ -19,6 +19,7 @@ const getRefundRecipients = async (expense) => {
 
     const refundAmountPerRecipient = amount / numRecipients;
 
+    // Fetch recipient pseudonyms
     const recipients = await User.find({ _id: { $in: refund_recipients } }).select('pseudonym');
 
     return recipients.map(recipient => ({
@@ -30,7 +31,7 @@ const getRefundRecipients = async (expense) => {
 /**
  * Calculates refunds based on expenses
  * @param {Array} expenses The array of expenses for which refunds need to be calculated
- * @returns {Array} Returns an array of refund details containing expense ID, group ID, creator pseudonym, and refund recipients
+ * @returns {Array} Returns an array of refund details containing expense ID, group ID, creator pseudonym, expense title, expense category, and refund recipients
  */
 const calculateRefunds = async (expenses) => {
     const refunds = [];
@@ -44,6 +45,8 @@ const calculateRefunds = async (expenses) => {
                 expense_id: expense._id,
                 group_id: expense.group_id,
                 creator_pseudonym: creator.pseudonym,
+                expense_title: expense.title,
+                expense_category: expense.category,
                 refund_recipients: refundRecipients
             });
         }
