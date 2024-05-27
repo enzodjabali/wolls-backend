@@ -1,7 +1,7 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require("../models/GroupMembership");
+const User = require('../models/User');
 const LOCALE = require('../locales/en-GB');
-
 const mongoose = require("mongoose");
 
 /**
@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
  * @param {Object} expense The expense object containing amount and refund recipients
  * @returns {Array} Returns an array of refund objects containing recipient ID and refund amount
  */
-const getRefundRecipients = (expense) => {
+const getRefundRecipients = async (expense) => {
     const { amount, refund_recipients } = expense;
     const numRecipients = refund_recipients.length;
 
@@ -19,8 +19,10 @@ const getRefundRecipients = (expense) => {
 
     const refundAmountPerRecipient = amount / numRecipients;
 
-    return refund_recipients.map(recipient => ({
-        recipient_id: recipient,
+    const recipients = await User.find({ _id: { $in: refund_recipients } }).select('pseudonym');
+
+    return recipients.map(recipient => ({
+        recipient_pseudonym: recipient.pseudonym,
         refund_amount: refundAmountPerRecipient
     }));
 };
@@ -28,23 +30,24 @@ const getRefundRecipients = (expense) => {
 /**
  * Calculates refunds based on expenses
  * @param {Array} expenses The array of expenses for which refunds need to be calculated
- * @returns {Array} Returns an array of refund details containing expense ID, group ID, creator ID, and refund recipients
+ * @returns {Array} Returns an array of refund details containing expense ID, group ID, creator pseudonym, and refund recipients
  */
-const calculateRefunds = (expenses) => {
+const calculateRefunds = async (expenses) => {
     const refunds = [];
 
-    expenses.forEach((expense) => {
+    for (const expense of expenses) {
         if (!expense.isRefunded) {
-            const refundRecipients = getRefundRecipients(expense);
+            const refundRecipients = await getRefundRecipients(expense);
+            const creator = await User.findById(expense.creator_id).select('pseudonym');
 
             refunds.push({
                 expense_id: expense._id,
                 group_id: expense.group_id,
-                creator_id: expense.creator_id,
+                creator_pseudonym: creator.pseudonym,
                 refund_recipients: refundRecipients
             });
         }
-    });
+    }
 
     return refunds;
 };
@@ -52,19 +55,18 @@ const calculateRefunds = (expenses) => {
 /**
  * Calculates refunds based on expenses in a simplified manner
  * @param {Array} expenses The array of expenses for which refunds need to be calculated
- * @returns {Array} Returns an array of refund details containing creator ID, recipient ID, and refund amount
+ * @returns {Array} Returns an array of refund details containing creator pseudonym, recipient pseudonym, and refund amount
  */
-const calculateRefundsSimplified = (expenses) => {
+const calculateRefundsSimplified = async (expenses) => {
     const refunds = {};
 
-    expenses.forEach((expense) => {
+    for (const expense of expenses) {
         if (!expense.isRefunded) {
             const { creator_id, refund_recipients, amount } = expense;
             const numRecipients = refund_recipients.length;
-
             const refundAmountPerRecipient = amount / numRecipients;
 
-            refund_recipients.forEach(recipient => {
+            for (const recipient of refund_recipients) {
                 if (!refunds[creator_id]) {
                     refunds[creator_id] = {};
                 }
@@ -73,20 +75,23 @@ const calculateRefundsSimplified = (expenses) => {
                 }
 
                 refunds[creator_id][recipient] += refundAmountPerRecipient;
-            });
+            }
         }
-    });
+    }
 
     const refundsArray = [];
-    Object.keys(refunds).forEach(creator_id => {
-        Object.keys(refunds[creator_id]).forEach(recipient => {
+
+    for (const creator_id of Object.keys(refunds)) {
+        const creator = await User.findById(creator_id).select('pseudonym');
+        for (const recipient_id of Object.keys(refunds[creator_id])) {
+            const recipient = await User.findById(recipient_id).select('pseudonym');
             refundsArray.push({
-                creator_id,
-                recipient_id: recipient,
-                refund_amount: refunds[creator_id][recipient]
+                creator_pseudonym: creator.pseudonym,
+                recipient_pseudonym: recipient.pseudonym,
+                refund_amount: refunds[creator_id][recipient_id]
             });
-        });
-    });
+        }
+    }
 
     return refundsArray;
 };
@@ -117,9 +122,9 @@ const getRefunds = async (req, res) => {
         let refunds = [];
 
         if (simplified) {
-            refunds = calculateRefundsSimplified(expenses);
+            refunds = await calculateRefundsSimplified(expenses);
         } else {
-            refunds = calculateRefunds(expenses);
+            refunds = await calculateRefunds(expenses);
         }
 
         res.status(200).json(refunds);
