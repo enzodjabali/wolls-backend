@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
  * @param {Object} expense The expense object containing amount and refund recipients
  * @returns {Array} Returns an array of refund objects containing recipient pseudonym and refund amount
  */
-const getRefundRecipients = async (expense) => {
+const getRefundRecipients = async (expense, creatorPseudonym) => {
     const { amount, refund_recipients } = expense;
     const numRecipients = refund_recipients.length;
 
@@ -18,14 +18,14 @@ const getRefundRecipients = async (expense) => {
     }
 
     const refundAmountPerRecipient = amount / numRecipients;
-
-    // Fetch recipient pseudonyms
     const recipients = await User.find({ _id: { $in: refund_recipients } }).select('pseudonym');
 
-    return recipients.map(recipient => ({
-        recipient_pseudonym: recipient.pseudonym,
-        refund_amount: refundAmountPerRecipient
-    }));
+    return recipients
+        .filter(recipient => recipient.pseudonym !== creatorPseudonym)
+        .map(recipient => ({
+            recipient_pseudonym: recipient.pseudonym,
+            refund_amount: refundAmountPerRecipient
+        }));
 };
 
 /**
@@ -38,28 +38,25 @@ const calculateRefunds = async (expenses) => {
 
     for (const expense of expenses) {
         if (!expense.isRefunded) {
-            const refundRecipients = await getRefundRecipients(expense);
             const creator = await User.findById(expense.creator_id).select('pseudonym');
+            const refundRecipients = await getRefundRecipients(expense, creator.pseudonym);
 
-            refunds.push({
-                expense_id: expense._id,
-                group_id: expense.group_id,
-                creator_pseudonym: creator.pseudonym,
-                expense_title: expense.title,
-                expense_category: expense.category,
-                refund_recipients: refundRecipients
-            });
+            if (refundRecipients.length > 0) {
+                refunds.push({
+                    expense_id: expense._id,
+                    group_id: expense.group_id,
+                    creator_pseudonym: creator.pseudonym,
+                    expense_title: expense.title,
+                    expense_category: expense.category,
+                    refund_recipients: refundRecipients
+                });
+            }
         }
     }
 
     return refunds;
 };
 
-/**
- * Calculates refunds based on expenses in a simplified manner
- * @param {Array} expenses The array of expenses for which refunds need to be calculated
- * @returns {Array} Returns an array of refund details containing creator pseudonym, recipient pseudonym, and refund amount
- */
 const calculateRefundsSimplified = async (expenses) => {
     const refunds = {};
 
@@ -68,35 +65,77 @@ const calculateRefundsSimplified = async (expenses) => {
             const { creator_id, refund_recipients, amount } = expense;
             const numRecipients = refund_recipients.length;
             const refundAmountPerRecipient = amount / numRecipients;
+            const creator = await User.findById(creator_id).select('pseudonym');
 
             for (const recipient of refund_recipients) {
-                if (!refunds[creator_id]) {
-                    refunds[creator_id] = {};
-                }
-                if (!refunds[creator_id][recipient]) {
-                    refunds[creator_id][recipient] = 0;
+                const recipientUser = await User.findById(recipient).select('pseudonym');
+                if (creator.pseudonym === recipientUser.pseudonym) {
+                    continue; // Skip if the creator is the recipient
                 }
 
-                refunds[creator_id][recipient] += refundAmountPerRecipient;
+                const key = `${creator.pseudonym}-${recipientUser.pseudonym}`;
+                if (!refunds[key]) {
+                    refunds[key] = 0;
+                }
+
+                refunds[key] += refundAmountPerRecipient;
             }
         }
     }
 
     const refundsArray = [];
 
-    for (const creator_id of Object.keys(refunds)) {
-        const creator = await User.findById(creator_id).select('pseudonym');
-        for (const recipient_id of Object.keys(refunds[creator_id])) {
-            const recipient = await User.findById(recipient_id).select('pseudonym');
+    for (const key of Object.keys(refunds)) {
+        const [creatorPseudonym, recipientPseudonym] = key.split('-');
+        const refundAmount = refunds[key];
+
+        if (refundAmount > 0) {
             refundsArray.push({
-                creator_pseudonym: creator.pseudonym,
-                recipient_pseudonym: recipient.pseudonym,
-                refund_amount: refunds[creator_id][recipient_id]
+                creator_pseudonym: creatorPseudonym,
+                recipient_pseudonym: recipientPseudonym,
+                refund_amount: refundAmount
             });
         }
     }
 
-    return refundsArray;
+    const simplifiedRefunds = {};
+
+    refundsArray.forEach(refund => {
+        const { creator_pseudonym, recipient_pseudonym, refund_amount } = refund;
+        const key = `${creator_pseudonym}-${recipient_pseudonym}`;
+
+        if (!simplifiedRefunds[key]) {
+            simplifiedRefunds[key] = 0;
+        }
+
+        const reverseKey = `${recipient_pseudonym}-${creator_pseudonym}`;
+        const reverseRefund = simplifiedRefunds[reverseKey] || 0;
+
+        if (refund_amount > reverseRefund) {
+            simplifiedRefunds[key] = refund_amount - reverseRefund;
+            delete simplifiedRefunds[reverseKey];
+        } else if (reverseRefund > refund_amount) {
+            simplifiedRefunds[reverseKey] = reverseRefund - refund_amount;
+            delete simplifiedRefunds[key];
+        }
+    });
+
+    const simplifiedRefundsArray = [];
+
+    for (const key of Object.keys(simplifiedRefunds)) {
+        const [creatorPseudonym, recipientPseudonym] = key.split('-');
+        const refundAmount = simplifiedRefunds[key];
+
+        if (refundAmount > 0) {
+            simplifiedRefundsArray.push({
+                creator_pseudonym: creatorPseudonym,
+                recipient_pseudonym: recipientPseudonym,
+                refund_amount: refundAmount
+            });
+        }
+    }
+
+    return simplifiedRefundsArray;
 };
 
 /**
