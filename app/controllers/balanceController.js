@@ -49,12 +49,14 @@ const getBalances = async (req, res) => {
             }
         }
 
-        const result = {};
+        const filteredBalances = {};
         for (const { pseudonym, balance } of Object.values(balances)) {
-            result[pseudonym] = balance;
+            if (balance !== 0) {
+                filteredBalances[pseudonym] = balance;
+            }
         }
 
-        res.status(200).json({ balances: result });
+        res.status(200).json({ balances: filteredBalances });
     } catch (error) {
         console.error('Error fetching the balances:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
