@@ -335,4 +335,46 @@ const deleteExpenseAttachment = async (req, res) => {
     }
 };
 
-module.exports = { getExpenses, getExpense, createExpense, updateExpense, deleteExpense, deleteExpenseAttachment };
+/**
+ * Retrieves the total expenses made by the current user and the total expenses of the group
+ * @param {Object} req The request object containing the groupId in req.params.groupId and the userId in req.userId
+ * @param {Object} res The response object to send the total expenses or an error response
+ * @returns {Object} Returns the total expenses made by the current user and the total expenses of the group if successful, otherwise returns an error response
+ */
+const getGroupExpensesAmounts = async (req, res) => {
+    const groupId = req.params.groupId;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            console.error('Invalid groupId:', groupId);
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
+        const membership = await GroupMembership.findOne({ user_id: req.userId, group_id: groupId });
+
+        if (!membership || !membership.has_accepted_invitation) {
+            console.error('User is not a member of the group or hasn\'t accepted invitation:', req.userId, groupId);
+            return res.status(403).json({ error: LOCALE.notAllowedToViewGroupExpenses });
+        }
+
+        const userExpenses = await Expense.aggregate([
+            { $match: { creator_id: new mongoose.Types.ObjectId(req.userId), group_id: new mongoose.Types.ObjectId(groupId) } },
+            { $group: { _id: null, totalAmount: { $sum: "$amount" } } }
+        ]);
+
+        const groupExpenses = await Expense.aggregate([
+            { $match: { group_id: new mongoose.Types.ObjectId(groupId) } },
+            { $group: { _id: null, totalAmount: { $sum: "$amount" } } }
+        ]);
+
+        const userTotalAmount = userExpenses.length > 0 ? userExpenses[0].totalAmount : 0;
+        const groupTotalAmount = groupExpenses.length > 0 ? groupExpenses[0].totalAmount : 0;
+
+        res.status(200).json({ userTotalAmount, groupTotalAmount });
+    } catch (error) {
+        console.error('Error fetching the expense sums:', error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
+};
+
+module.exports = { getExpenses, getExpense, createExpense, updateExpense, deleteExpense, deleteExpenseAttachment, getGroupExpensesAmounts };

@@ -786,6 +786,37 @@
         }
       }
     },
+    "/v1/expenses/{groupId}/amount": {
+      "get": {
+        "tags": ["Expenses"],
+        "description": "Get the expenses amount for the current user and the group",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/v1/expenses": {
       "post": {
         "tags": ["Expenses"],
