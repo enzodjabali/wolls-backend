@@ -6,13 +6,13 @@ const LOCALE = require('../locales/en-GB');
 const mongoose = require('mongoose');
 
 /**
- * Creates a group membership if the current user is an administrator of the group
- * @param {Object} req The request object containing user_pseudonym and group_id in req.body and the userId in req.userId
- * @param {Object} res The response object to send the created group membership or an error response
- * @returns {Object} Returns the created group membership if successful, otherwise returns an error response
+ * Creates group memberships for multiple users if the current user is an administrator of the group
+ * @param {Object} req The request object containing invited_users and group_id in req.body and the userId in req.userId
+ * @param {Object} res The response object to send the created group memberships or an error response
+ * @returns {Object} Returns the created group memberships if successful, otherwise returns an error response
  */
 const createGroupMembership = async (req, res) => {
-    const { user_pseudonym, group_id } = req.body;
+    const { invited_users, group_id } = req.body;
     const currentUserId = req.userId;
 
     try {
@@ -26,28 +26,34 @@ const createGroupMembership = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notGroupAdmin });
         }
 
-        const user = await User.findOne({ pseudonym: user_pseudonym });
+        const users = await User.find({ pseudonym: { $in: invited_users } });
 
-        if (!user) {
-            return res.status(404).json({ error: LOCALE.userNotFound });
+        if (users.length !== invited_users.length) {
+            const notFoundUsers = invited_users.filter(pseudonym => !users.some(user => user.pseudonym === pseudonym));
+            return res.status(404).json({ error: `${LOCALE.usersNotFound}: ${notFoundUsers.join(', ')}` });
         }
 
-        const existingMembership = await GroupMembership.findOne({ user_id: user._id, group_id });
+        const newMemberships = [];
 
-        if (existingMembership) {
-            return res.status(400).json({ error: LOCALE.userAlreadyMemberOfGroup });
+        for (const user of users) {
+            const existingMembership = await GroupMembership.findOne({ user_id: user._id, group_id });
+
+            if (existingMembership) {
+                return res.status(400).json({ error: `${user.pseudonym} is already a member of the group.` });
+            }
+
+            const newMembership = new GroupMembership({
+                user_id: user._id,
+                group_id
+            });
+
+            const savedMembership = await newMembership.save();
+            newMemberships.push(savedMembership);
         }
 
-        const newMembership = new GroupMembership({
-            user_id: user._id,
-            group_id
-        });
-
-        const savedMembership = await newMembership.save();
-
-        res.status(201).json(savedMembership);
+        res.status(201).json(newMemberships);
     } catch (error) {
-        console.error('Error creating the group membership:', error);
+        console.error('Error creating the group memberships:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };

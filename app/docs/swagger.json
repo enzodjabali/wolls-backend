@@ -1191,13 +1191,16 @@
     "GroupMembershipRequestBody": {
       "type": "object",
       "properties": {
-        "user_pseudonym": {
-          "type": "string",
-          "example": "JoeDoe2024"
-        },
         "group_id": {
           "type": "string",
           "example": "609e8e51894f0b0008317222"
+        },
+        "invited_users": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": ["user1", "user2"]
+          }
         }
       }
     },
