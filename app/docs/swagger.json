@@ -345,6 +345,37 @@
         }
       }
     },
+    "/v1/groups/memberships/{groupId}/members/status": {
+      "get": {
+        "tags": ["Group Memberships"],
+        "description": "Retrieves all users and indicates their membership and invitation status in a specific group",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/v1/groups/memberships/{groupId}/{userId}": {
       "delete": {
         "tags": ["Group Memberships"],

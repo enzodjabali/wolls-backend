@@ -1,11 +1,12 @@
 const express = require('express');
-const { createGroupMembership, getGroupMembers, deleteGroupMembership, getInvitations, manageInvitation, getInvitationCount } = require('../controllers/groupMembershipController');
+const { createGroupMembership, getGroupMembers, deleteGroupMembership, getInvitations, manageInvitation, getInvitationCount, getAllUsersWithGroupMembershipStatus } = require('../controllers/groupMembershipController');
 const router = express.Router();
 
 const authenticateJWT = require('../middlewares/auth');
 
 router.post('/', authenticateJWT, createGroupMembership);
 router.get('/:id/members', authenticateJWT, getGroupMembers);
+router.get('/:id/members/status', authenticateJWT, getAllUsersWithGroupMembershipStatus);
 router.delete('/:groupId/:userId', authenticateJWT, deleteGroupMembership);
 router.get('/invitations', authenticateJWT, getInvitations);
 router.post('/invitations', authenticateJWT, manageInvitation);

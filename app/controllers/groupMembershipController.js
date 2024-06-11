@@ -238,4 +238,47 @@ const getInvitationCount = async (req, res) => {
     }
 };
 
-module.exports = { createGroupMembership, getGroupMembers, deleteGroupMembership, getInvitations, manageInvitation, getInvitationCount };
+/**
+ * Retrieves all users and indicates their membership and invitation status in a specific group
+ * @param {Object} req The request object containing the groupId in req.params.id
+ * @param {Object} res The response object to send the list of users with membership status or an error response
+ * @returns {Object} Returns the list of users with membership status if successful, otherwise returns an error response
+ */
+const getAllUsersWithGroupMembershipStatus = async (req, res) => {
+    const groupId = req.params.id;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
+        const users = await User.find().select('_id pseudonym');
+        const groupMemberships = await GroupMembership.find({ group_id: groupId });
+        const userMembershipMap = new Map(
+            groupMemberships.map(membership => [
+                membership.user_id.toString(),
+                {
+                    has_accepted_invitation: membership.has_accepted_invitation,
+                    has_pending_invitation: !membership.has_accepted_invitation
+                }
+            ])
+        );
+
+        const usersWithMembershipStatus = users.map(user => {
+            const membership = userMembershipMap.get(user._id.toString());
+            return {
+                _id: user._id,
+                pseudonym: user.pseudonym,
+                has_accepted_invitation: membership ? membership.has_accepted_invitation : false,
+                has_pending_invitation: membership ? membership.has_pending_invitation : false
+            };
+        });
+
+        res.status(200).json(usersWithMembershipStatus);
+    } catch (error) {
+        console.error('Error fetching users with group membership status:', error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
+};
+
+module.exports = { createGroupMembership, getGroupMembers, deleteGroupMembership, getInvitations, manageInvitation, getInvitationCount, getAllUsersWithGroupMembershipStatus };
