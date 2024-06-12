@@ -18,7 +18,7 @@ const userSchema = new Schema({
     email: {
         type: String,
         unique: true,
-        required: true
+        required: false
     },
     emailPaypal: {
         type: String,

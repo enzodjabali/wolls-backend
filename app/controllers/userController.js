@@ -9,7 +9,8 @@ const { createUserSchema, updateUserSchema } = require('../middlewares/validatio
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const crypto = require('crypto');
 
 /**
  * Registers a new user
@@ -454,7 +455,7 @@ const logoutUser = (req, res) => {
 };
 
 /**
- * Deletes the current user's account
+ * Deletes the current user's account by anonymizing the user data
  * @param {Object} req The request object containing the userId in req.userId
  * @param {Object} res The response object to send a success message or an error response
  * @returns {Object} Returns a success message if deletion is successful, otherwise returns an error response
@@ -468,6 +469,25 @@ const deleteCurrentUser = async (req, res) => {
             return res.status(404).json({ error: LOCALE.userNotFound });
         }
 
+        // Check if the user is an administrator of any groups
+        const adminGroups = await GroupMembership.find({ user_id: userId, is_administrator: true }).populate('group_id', 'name');
+
+        if (adminGroups.length > 0) {
+            const groupList = adminGroups.map(membership => ({
+                group_id: membership.group_id._id,
+                group_name: membership.group_id.name
+            }));
+            return res.status(403).json({ error: LOCALE.userIsAdmin, groups: groupList });
+        }
+
+        const generateNewPseudonym = () => {
+            const randomChars = crypto.randomBytes(3).toString('hex');
+            return `user${randomChars}`;
+        };
+
+        const newPseudonym = generateNewPseudonym();
+
+        // If the user has a picture or IBAN attachment, delete them from S3
         if (!user.isGoogle && user.picture) {
             const bucketName = 'user-pictures';
             const fileName = user.picture;
@@ -476,7 +496,7 @@ const deleteCurrentUser = async (req, res) => {
                 await minioClient.removeObject(bucketName, fileName);
             } catch (deleteError) {
                 console.error('Error deleting picture from S3:', deleteError);
-                res.status(500).json({ error: LOCALE.internalServerError });
+                return res.status(500).json({ error: LOCALE.internalServerError });
             }
         }
 
@@ -488,11 +508,21 @@ const deleteCurrentUser = async (req, res) => {
                 await minioClient.removeObject(bucketName, fileName);
             } catch (deleteError) {
                 console.error('Error deleting IBAN attachment from S3:', deleteError);
-                res.status(500).json({ error: LOCALE.internalServerError });
+                return res.status(500).json({ error: LOCALE.internalServerError });
             }
         }
 
-        await User.findByIdAndDelete(userId);
+        user.pseudonym = newPseudonym;
+        user.firstname = '';
+        user.lastname = '';
+        user.email = '';
+        user.emailPaypal = '';
+        user.password = '';
+        user.iban = '';
+        user.ibanAttachment = '';
+        user.picture = '';
+
+        await user.save();
 
         res.status(200).json({ message: LOCALE.accountSuccessfullyDeleted });
     } catch (error) {
