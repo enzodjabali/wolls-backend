@@ -504,8 +504,8 @@ const deleteCurrentUser = async (req, res) => {
 /**
  * Retrieves a user's details by their ID
  * @param {Object} req The request object containing the userId in req.params.id
- * @param {Object} res The response object to send the user's pseudonym or an error response
- * @returns {Object} Returns the user's pseudonym if found, otherwise returns an error response
+ * @param {Object} res The response object to send the user's details or an error response
+ * @returns {Object} Returns the user's details if found, otherwise returns an error response
  */
 const getUserById = async (req, res) => {
     const userId = req.params.id;
@@ -535,26 +535,14 @@ const getUserById = async (req, res) => {
         }
 
         const userData = {
-            pseudonym: user.pseudonym
+            _id: user._id,
+            pseudonym: user.pseudonym,
+            firstname: user.firstname || '',
+            lastname: user.lastname || '',
+            emailPaypal: user.emailPaypal || '',
+            iban: user.iban || '',
+            isGoogle: user.isGoogle
         };
-
-        if (user.firstname) {
-            userData.firstname = user.firstname;
-        }
-
-        if (user.lastname) {
-            userData.lastname = user.lastname;
-        }
-
-        if (user.emailPaypal) {
-            userData.emailPaypal = user.emailPaypal;
-        }
-
-        if (user.iban) {
-            userData.iban = user.iban;
-        }
-
-        userData.isGoogle = user.isGoogle;
 
         const fetchAttachment = async (bucketName, fileName) => {
             try {
@@ -579,7 +567,7 @@ const getUserById = async (req, res) => {
             const dataChunks = [];
             const dataStream = await minioClient.getObject(bucketName, fileName);
 
-            dataStream.on('data', async function (chunk) {
+            dataStream.on('data', function (chunk) {
                 dataChunks.push(chunk);
             });
 
@@ -609,7 +597,7 @@ const getUserById = async (req, res) => {
                 }
             });
 
-            dataStream.on('error', async function (err) {
+            dataStream.on('error', function (err) {
                 console.error('Error fetching the user IBAN attachment:', err);
                 res.status(500).json({ error: LOCALE.internalServerError });
             });
