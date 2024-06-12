@@ -80,11 +80,13 @@ const getGroupMembers = async (req, res) => {
         }
 
         const groupMemberships = await GroupMembership.find({ group_id: groupId });
-        const userIds = groupMemberships.map(membership => membership.user_id);
+        const acceptedMembers = groupMemberships.filter(membership => membership.has_accepted_invitation);
+
+        const userIds = acceptedMembers.map(membership => membership.user_id);
 
         const groupMembers = await Promise.all(userIds.map(async userId => {
             const user = await User.findById(userId).select('_id pseudonym firstname lastname');
-            const groupMembership = groupMemberships.find(membership => membership.user_id.toString() === userId.toString());
+            const groupMembership = acceptedMembers.find(membership => membership.user_id.toString() === userId.toString());
             return {
                 _id: user._id,
                 pseudonym: user.pseudonym,
