@@ -254,25 +254,42 @@ const getAllUsersWithGroupMembershipStatus = async (req, res) => {
             return res.status(400).json({ error: LOCALE.groupNotFound });
         }
 
+        // Fetch all users
         const users = await User.find().select('_id pseudonym');
-        const groupMemberships = await GroupMembership.find({ group_id: groupId });
-        const userMembershipMap = new Map(
-            groupMemberships.map(membership => [
-                membership.user_id.toString(),
-                {
-                    has_accepted_invitation: membership.has_accepted_invitation,
-                    has_pending_invitation: !membership.has_accepted_invitation
-                }
-            ])
-        );
 
+        // Fetch all group memberships for the specified group
+        const groupMemberships = await GroupMembership.find({ group_id: groupId });
+
+        // Map to store membership and administrator status for each user
+        const userStatusMap = new Map();
+
+        groupMemberships.forEach(membership => {
+            const userIdString = membership.user_id.toString();
+            if (!userStatusMap.has(userIdString)) {
+                userStatusMap.set(userIdString, {
+                    has_accepted_invitation: membership.has_accepted_invitation,
+                    has_pending_invitation: !membership.has_accepted_invitation,
+                    is_administrator: membership.is_administrator
+                });
+            } else {
+                // Update the existing entry to reflect administrator status
+                const existingStatus = userStatusMap.get(userIdString);
+                if (membership.is_administrator) {
+                    existingStatus.is_administrator = true;
+                }
+            }
+        });
+
+        // Prepare the response with membership and administrator status
         const usersWithMembershipStatus = users.map(user => {
-            const membership = userMembershipMap.get(user._id.toString());
+            const userIdString = user._id.toString();
+            const membership = userStatusMap.get(userIdString);
             return {
                 _id: user._id,
                 pseudonym: user.pseudonym,
                 has_accepted_invitation: membership ? membership.has_accepted_invitation : false,
-                has_pending_invitation: membership ? membership.has_pending_invitation : false
+                has_pending_invitation: membership ? membership.has_pending_invitation : false,
+                is_administrator: membership ? membership.is_administrator : false
             };
         });
 
