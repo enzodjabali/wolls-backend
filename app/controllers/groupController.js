@@ -92,7 +92,35 @@ const getGroupsList = async (req, res) => {
         const groupIds = userGroupMemberships.map(membership => membership.group_id);
         const allGroups = await Group.find({ _id: { $in: groupIds } });
 
-        res.status(200).json(allGroups);
+        // Fetch administrators for each group
+        const adminUsersByGroup = await GroupMembership.aggregate([
+            { $match: { group_id: { $in: groupIds }, is_administrator: true } },
+            {
+                $group: {
+                    _id: '$group_id',
+                    adminUsers: { $push: '$user_id' }
+                }
+            }
+        ]);
+
+        // Convert the aggregation result to a more usable format
+        const adminUsersMap = adminUsersByGroup.reduce((acc, { _id, adminUsers }) => {
+            acc[_id] = adminUsers;
+            return acc;
+        }, {});
+
+        // Format the response
+        const response = allGroups.map(group => ({
+            _id: group._id,
+            name: group.name,
+            description: group.description,
+            theme: group.theme,
+            createdAt: group.createdAt,
+            administrators: adminUsersMap[group._id] || [],
+            __v: group.__v
+        }));
+
+        res.status(200).json(response);
     } catch (error) {
         console.error('Error fetching the groups:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
