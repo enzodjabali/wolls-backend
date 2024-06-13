@@ -49,6 +49,7 @@ module.exports = {
     pictureMalformed: "Votre photo de profil est manquante ou incorrecte",
     pictureWrongFormat: "Votre photo de profil doit être au format PNG, JPG ou JPEG",
     notAllowedToAccessUserDetails: "Vous n'êtes pas autorisé à accéder aux détails de l'utilisateur",
+    cannotDeleteAccountOnlyAdmin: "Vous ne pouvez pas supprimer votre compte car vous êtes le seul administrateur de groupes",
 
     // Group
     groupNotFound: "Groupe non trouvé",

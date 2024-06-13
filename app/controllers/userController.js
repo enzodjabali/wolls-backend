@@ -455,7 +455,7 @@ const logoutUser = (req, res) => {
 };
 
 /**
- * Deletes the current user's account by anonymizing the user data
+ * Deletes the current user's account by anonymizing the user data and removing group memberships
  * @param {Object} req The request object containing the userId in req.userId
  * @param {Object} res The response object to send a success message or an error response
  * @returns {Object} Returns a success message if deletion is successful, otherwise returns an error response
@@ -470,14 +470,24 @@ const deleteCurrentUser = async (req, res) => {
         }
 
         // Check if the user is an administrator of any groups
-        const adminGroups = await GroupMembership.find({ user_id: userId, is_administrator: true }).populate('group_id', 'name');
+        const adminGroups = await GroupMembership.find({ user_id: userId, is_administrator: true });
 
-        if (adminGroups.length > 0) {
-            const groupList = adminGroups.map(membership => ({
-                group_id: membership.group_id._id,
-                group_name: membership.group_id.name
-            }));
-            return res.status(403).json({ error: LOCALE.userIsAdmin, groups: groupList });
+        // Fetch group memberships to find if the user is the only admin
+        const groupIds = adminGroups.map(membership => membership.group_id);
+        const adminCounts = await GroupMembership.aggregate([
+            { $match: { group_id: { $in: groupIds }, is_administrator: true } },
+            {
+                $group: {
+                    _id: '$group_id',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const isOnlyAdmin = adminCounts.some(group => group.count === 1);
+
+        if (isOnlyAdmin) {
+            return res.status(403).json({ error: LOCALE.cannotDeleteAccountOnlyAdmin });
         }
 
         const generateNewPseudonym = () => {
@@ -525,6 +535,9 @@ const deleteCurrentUser = async (req, res) => {
         user.isDeleted = true;
 
         await user.save();
+
+        // Delete all GroupMembership entries for the user
+        await GroupMembership.deleteMany({ user_id: userId });
 
         res.status(200).json({ message: LOCALE.accountSuccessfullyDeleted });
     } catch (error) {
