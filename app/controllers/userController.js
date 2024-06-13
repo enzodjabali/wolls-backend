@@ -512,16 +512,16 @@ const deleteCurrentUser = async (req, res) => {
             }
         }
 
-        // Anonymize the user data
+        // Anonymize the user data by setting unique values to avoid conflict
         user.pseudonym = newPseudonym;
-        user.firstname = '';
-        user.lastname = '';
-        user.email = '';
-        user.emailPaypal = '';
-        user.password = '';
-        user.iban = '';
-        user.ibanAttachment = '';
-        user.picture = '';
+        user.firstname = undefined;
+        user.lastname = undefined;
+        user.email = newPseudonym;
+        user.emailPaypal = undefined;
+        user.password = undefined;
+        user.iban = undefined;
+        user.ibanAttachment = undefined;
+        user.picture = undefined;
         user.isDeleted = true;
 
         await user.save();
