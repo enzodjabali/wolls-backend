@@ -512,6 +512,7 @@ const deleteCurrentUser = async (req, res) => {
             }
         }
 
+        // Anonymize the user data
         user.pseudonym = newPseudonym;
         user.firstname = '';
         user.lastname = '';
@@ -521,6 +522,7 @@ const deleteCurrentUser = async (req, res) => {
         user.iban = '';
         user.ibanAttachment = '';
         user.picture = '';
+        user.isDeleted = true;
 
         await user.save();
 

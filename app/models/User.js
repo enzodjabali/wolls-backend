@@ -17,7 +17,7 @@ const userSchema = new Schema({
     },
     email: {
         type: String,
-        unique: true,
+        unique: false,
         required: false
     },
     emailPaypal: {
@@ -44,6 +44,10 @@ const userSchema = new Schema({
     picture: {
         type: String,
         required: false
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
 });
 
