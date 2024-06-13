@@ -90,7 +90,10 @@ const getGroupsList = async (req, res) => {
         });
 
         const groupIds = userGroupMemberships.map(membership => membership.group_id);
-        const allGroups = await Group.find({ _id: { $in: groupIds } });
+
+        // Fetch all groups sorted by createdAt in descending order
+        const allGroups = await Group.find({ _id: { $in: groupIds } })
+            .sort({ createdAt: -1 });
 
         // Fetch administrators for each group
         const adminUsersByGroup = await GroupMembership.aggregate([
