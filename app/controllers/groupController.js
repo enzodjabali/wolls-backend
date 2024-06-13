@@ -268,4 +268,52 @@ const deleteGroupById = async (req, res) => {
     }
 };
 
-module.exports = { createGroup, getGroupsList, getGroupById, updateGroupById, deleteGroupById };
+/**
+ * Retrieves the names of groups where the current user is the only administrator
+ * @param {Object} req The request object containing the userId in req.userId
+ * @param {Object} res The response object to send the list of group names or an error response
+ * @returns {Object} Returns the names of groups where the current user is the only administrator if successful, otherwise returns an error response
+ */
+const getGroupsWhereCurrentUserIsOnlyAdmin = async (req, res) => {
+    try {
+        // Find all groups where the current user is an administrator
+        const userAdminGroups = await GroupMembership.find({
+            user_id: req.userId,
+            is_administrator: true,
+            has_accepted_invitation: true
+        }).select('group_id');
+
+        const groupIds = userAdminGroups.map(membership => membership.group_id);
+
+        // Fetch all memberships for these groups to find if there are other administrators
+        const memberships = await GroupMembership.find({
+            group_id: { $in: groupIds },
+            is_administrator: true,
+            has_accepted_invitation: true
+        });
+
+        // Map to count administrators for each group
+        const adminCountMap = new Map();
+
+        memberships.forEach(membership => {
+            const groupId = membership.group_id.toString();
+            if (!adminCountMap.has(groupId)) {
+                adminCountMap.set(groupId, 0);
+            }
+            adminCountMap.set(groupId, adminCountMap.get(groupId) + 1);
+        });
+
+        // Filter groups where the current user is the only administrator
+        const userOnlyAdminGroupIds = groupIds.filter(groupId => adminCountMap.get(groupId.toString()) === 1);
+
+        // Fetch group details for the filtered groups
+        const groups = await Group.find({ _id: { $in: userOnlyAdminGroupIds } }).select('name');
+
+        res.status(200).json(groups);
+    } catch (error) {
+        console.error('Error fetching groups where user is the only admin:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+module.exports = { createGroup, getGroupsList, getGroupById, updateGroupById, deleteGroupById, getGroupsWhereCurrentUserIsOnlyAdmin };

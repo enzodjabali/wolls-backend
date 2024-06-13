@@ -137,6 +137,30 @@
         }
       }
     },
+    "/v1/groups/onlyAdmin": {
+      "get": {
+        "tags": ["Groups"],
+        "description": "Get the groups where the current user is the only administrator",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/v1/groups/{id}": {
       "get": {
         "tags": ["Groups"],
