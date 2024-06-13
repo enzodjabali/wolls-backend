@@ -145,7 +145,7 @@ const getGroupById = async (req, res) => {
         const group = await Group.findById(groupId);
 
         if (!group) {
-            return res.status(404).json({ message: LOCALE.groupNotFound });
+            return res.status(404).json({ error: LOCALE.groupNotFound });
         }
 
         const isMember = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId });
@@ -154,7 +154,22 @@ const getGroupById = async (req, res) => {
             return res.status(403).json({ error: LOCALE.notGroupMember });
         }
 
-        res.status(200).json(group);
+        const administrators = await GroupMembership.find({
+            group_id: groupId,
+            is_administrator: true
+        }).select('user_id -_id');
+
+        const adminIds = administrators.map(admin => admin.user_id);
+
+        res.status(200).json({
+            _id: group._id,
+            name: group.name,
+            description: group.description,
+            theme: group.theme,
+            createdAt: group.createdAt,
+            administrators: adminIds,
+            __v: group.__v
+        });
     } catch (error) {
         console.error('Error fetching the group:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
