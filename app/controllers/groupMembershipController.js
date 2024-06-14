@@ -178,7 +178,7 @@ const getInvitations = async (req, res) => {
     try {
         const groupMemberships = await GroupMembership.find({ user_id: userId, has_accepted_invitation: false });
         const groupIds = groupMemberships.map(membership => membership.group_id);
-        const groups = await Group.find({ _id: { $in: groupIds } });
+        const groups = await Group.find({ _id: { $in: groupIds } }, '_id name'); // Select only _id and name fields
 
         res.status(200).json(groups);
     } catch (error) {
