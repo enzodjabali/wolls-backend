@@ -254,8 +254,8 @@ const getAllUsersWithGroupMembershipStatus = async (req, res) => {
             return res.status(400).json({ error: LOCALE.groupNotFound });
         }
 
-        // Fetch all users
-        const users = await User.find().select('_id pseudonym');
+        // Fetch all users excluding those marked as deleted
+        const users = await User.find({ isDeleted: { $ne: true } }).select('_id pseudonym');
 
         // Fetch all group memberships for the specified group
         const groupMemberships = await GroupMembership.find({ group_id: groupId });

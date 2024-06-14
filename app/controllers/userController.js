@@ -153,14 +153,17 @@ const authenticateUserWithGoogle = async (req, res) => {
 const getUsersList = async (req, res) => {
     const currentUserId = req.userId;
 
-    User.find({ _id: { $ne: currentUserId } }, '_id pseudonym')
-        .then(result => {
-            res.status(200).json(result);
-        })
-        .catch(error => {
-            console.error('Error fetching the users:', error);
-            res.status(500).json({ error: LOCALE.internalServerError });
-        });
+    try {
+        const users = await User.find({
+            _id: { $ne: currentUserId },
+            isDeleted: { $ne: true } // Exclude deleted users
+        }, '_id pseudonym');
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching the users:', error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
 };
 
 /**
