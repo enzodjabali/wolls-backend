@@ -71,7 +71,7 @@ module.exports = {
     userSuccessfullyRemovedFromGroup: "User successfully removed from group",
     userHasNoInvitationForGroup: "User has no invitation for this group",
     invalidInvitationValue: "Invalid invitation value",
-    adminCannotRemoveOwnMembership: "Group admin cannot remove himself from the group",
+    adminCannotRemoveOwnMembership: "You're the only administrator of the group. Make another user administrator before leaving it.",
     usersNotFound: "The following user(s) couldn't be found:",
 
     // Expense

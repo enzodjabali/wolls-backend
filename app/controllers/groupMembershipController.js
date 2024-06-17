@@ -147,19 +147,38 @@ const deleteGroupMembership = async (req, res) => {
             return res.status(404).json({ error: LOCALE.notGroupMember });
         }
 
-        const isAdmin = await GroupMembership.exists({ user_id: currentUserId, group_id: groupId, is_administrator: true });
+        const currentUserMembership = await GroupMembership.findOne({ user_id: currentUserId, group_id: groupId });
 
-        if (!isAdmin) {
+        if (!currentUserMembership) {
             return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroupMembers });
         }
 
-        if (userId === currentUserId && isAdmin) {
-            return res.status(403).json({ error: LOCALE.adminCannotRemoveOwnMembership });
+        const isAdmin = currentUserMembership.is_administrator;
+        const isRemovingSelf = userId === currentUserId;
+        const targetIsAdmin = membership.is_administrator;
+
+        if (isAdmin) {
+            const adminCount = await GroupMembership.countDocuments({ group_id: groupId, is_administrator: true });
+
+            if (isRemovingSelf && adminCount === 1) {
+                return res.status(403).json({ error: LOCALE.adminCannotRemoveOwnMembership });
+            }
+
+            if (!isRemovingSelf && targetIsAdmin) {
+                return res.status(403).json({ error: LOCALE.cannotRemoveAnotherAdmin });
+            }
+
+            await GroupMembership.findByIdAndDelete(membership._id);
+
+            return res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
+        } else {
+            if (isRemovingSelf) {
+                await GroupMembership.findByIdAndDelete(membership._id);
+                return res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
+            } else {
+                return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroupMembers });
+            }
         }
-
-        await GroupMembership.findByIdAndDelete(membership._id);
-
-        res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
     } catch (error) {
         console.error('Error deleting a group membership:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
