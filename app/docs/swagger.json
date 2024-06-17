@@ -401,6 +401,52 @@
       }
     },
     "/v1/groups/memberships/{groupId}/{userId}": {
+      "put": {
+        "tags": ["Group Memberships"],
+        "description": "Updates a user administrator status from a group",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the group"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID of the user"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateGroupMembershipRequestBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
       "delete": {
         "tags": ["Group Memberships"],
         "description": "Remove a user from a group",
@@ -1256,6 +1302,15 @@
             "type": "string",
             "example": ["user1", "user2"]
           }
+        }
+      }
+    },
+    "UpdateGroupMembershipRequestBody": {
+      "type": "object",
+      "properties": {
+        "is_administrator": {
+          "type": "boolean",
+          "example": true
         }
       }
     },

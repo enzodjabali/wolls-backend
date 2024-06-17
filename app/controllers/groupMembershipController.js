@@ -111,6 +111,52 @@ const getGroupMembers = async (req, res) => {
 };
 
 /**
+ * Updates the administrator status of a group membership
+ * @param {Object} req The request object containing the groupId, userId, and isAdministrator in req.params and req.body
+ * @param {Object} res The response object to send success message or an error response
+ * @returns {Object} Returns a success message if the membership is updated successfully, otherwise returns an error response
+ */
+const updateGroupMembership = async (req, res) => {
+    const { groupId, userId } = req.params;
+    const { is_administrator } = req.body;
+    const currentUserId = req.userId;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: LOCALE.userNotFound });
+        }
+
+        const currentUserMembership = await GroupMembership.findOne({ user_id: currentUserId, group_id: groupId });
+
+        if (!currentUserMembership || !currentUserMembership.is_administrator) {
+            return res.status(403).json({ error: LOCALE.notAllowedToUpdateGroupMembership });
+        }
+
+        if (currentUserId === userId) {
+            return res.status(403).json({ error: LOCALE.adminCannotRevokeOwnAdminPrivilege });
+        }
+
+        const targetMembership = await GroupMembership.findOne({ user_id: userId, group_id: groupId });
+
+        if (!targetMembership) {
+            return res.status(404).json({ error: LOCALE.notGroupMember });
+        }
+
+        targetMembership.is_administrator = is_administrator;
+        await targetMembership.save();
+
+        res.status(200).json({ message: LOCALE.userAdminStatusUpdated });
+    } catch (error) {
+        console.error('Error updating group membership:', error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
+};
+
+/**
  * Deletes a group membership for a specified user in a group
  * @param {Object} req The request object containing the groupId and userId in req.params
  * @param {Object} res The response object to send success message or an error response
@@ -319,4 +365,4 @@ const getAllUsersWithGroupMembershipStatus = async (req, res) => {
     }
 };
 
-module.exports = { createGroupMembership, getGroupMembers, deleteGroupMembership, getInvitations, manageInvitation, getInvitationCount, getAllUsersWithGroupMembershipStatus };
+module.exports = { createGroupMembership, getGroupMembers, updateGroupMembership, deleteGroupMembership, getInvitations, manageInvitation, getInvitationCount, getAllUsersWithGroupMembershipStatus };

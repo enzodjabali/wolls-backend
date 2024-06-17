@@ -72,6 +72,8 @@ module.exports = {
     userHasNoInvitationForGroup: "L'utilisateur n'a pas d'invitation pour ce groupe",
     invalidInvitationValue: "La valeur de l'invitation n'est pas valide",
     adminCannotRemoveOwnMembership: "Vous êtes le seul administrateur du groupe. Faites d'un autre utilisateur administrateur avant de le quitter.",
+    adminCannotRevokeOwnAdminPrivilege: "Vous ne pouvez pas supprimer votre propre privilège d'administrateur.",
+    notAllowedToUpdateGroupMembership: "Vous n'êtes pas autorisé à modifier l'utilisateur du groupe",
     usersNotFound: "Les utilisateurs suivants sont introuvables:",
 
     // Expense
