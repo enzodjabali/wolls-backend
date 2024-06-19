@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const ForgotPassword = require('../models/ForgotPassword');
 const GroupMembership = require('../models/GroupMembership');
+const Expense = require('../models/Expense');
 const LOCALE = require('../locales/en-GB');
 const sendEmail = require('../middlewares/sendEmail');
 const minioClient = require('../middlewares/minioClient');
@@ -668,6 +669,145 @@ const getUserById = async (req, res) => {
 };
 
 /**
+ * Retrieves a user's details by their ID and group ID
+ * @param {Object} req The request object containing the userId and groupId in req.params
+ * @param {Object} res The response object to send the user's details or an error response
+ * @returns {Object} Returns the user's details if found, otherwise returns an error response
+ */
+const getUserDetailsByIdAndGroupId = async (req, res) => {
+    const { userId, groupId } = req.params;
+    const currentUserId = req.userId;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ error: LOCALE.userNotFound });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: LOCALE.userNotFound });
+        }
+
+        const currentUserMembership = await GroupMembership.findOne({ user_id: currentUserId, group_id: groupId, has_accepted_invitation: true });
+        if (!currentUserMembership) {
+            return res.status(403).json({ error: LOCALE.notAllowedToAccessUserDetails });
+        }
+
+        const targetUserMembership = await GroupMembership.findOne({ user_id: userId, group_id: groupId, has_accepted_invitation: true });
+        if (!targetUserMembership) {
+            return res.status(404).json({ error: LOCALE.userNotInGroup });
+        }
+
+        const isAdmin = targetUserMembership.is_administrator;
+
+        const expenses = await Expense.find({ group_id: groupId, isRefunded: false }).populate('refund_recipients');
+        let balance = 0;
+
+        for (const expense of expenses) {
+            const buyerId = expense.creator_id.toString();
+            const receivers = expense.refund_recipients.map(recipient => recipient._id.toString());
+            const splitAmount = expense.amount / receivers.length;
+
+            if (buyerId === userId) {
+                balance += expense.amount;
+            }
+            if (receivers.includes(userId)) {
+                balance -= splitAmount;
+            }
+        }
+
+        const userData = {
+            _id: user._id,
+            pseudonym: user.pseudonym,
+            firstname: user.firstname || '',
+            lastname: user.lastname || '',
+            emailPaypal: user.emailPaypal || '',
+            iban: user.iban || '',
+            isGoogle: user.isGoogle,
+            is_administrator: isAdmin,
+            balance
+        };
+
+        const fetchAttachment = async (bucketName, fileName) => {
+            try {
+                const data = await minioClient.getObject(bucketName, fileName);
+                const chunks = [];
+                for await (const chunk of data) {
+                    chunks.push(chunk);
+                }
+                const concatenatedBuffer = Buffer.concat(chunks);
+                const base64Data = concatenatedBuffer.toString('base64');
+                return { fileName, content: base64Data };
+            } catch (error) {
+                console.error(`Error fetching ${bucketName} attachment:`, error);
+                throw error;
+            }
+        };
+
+        if (user.ibanAttachment) {
+            const bucketName = 'user-ibans';
+            const fileName = user.ibanAttachment;
+
+            const dataChunks = [];
+            const dataStream = await minioClient.getObject(bucketName, fileName);
+
+            dataStream.on('data', function (chunk) {
+                dataChunks.push(chunk);
+            });
+
+            dataStream.on('end', async function () {
+                try {
+                    const concatenatedBuffer = Buffer.concat(dataChunks);
+                    const base64Data = concatenatedBuffer.toString('base64');
+
+                    userData.ibanAttachment = {
+                        fileName,
+                        content: base64Data
+                    };
+
+                    if (user.isGoogle) {
+                        userData.picture = user.picture;
+                        res.status(200).json(userData);
+                    } else {
+                        if (user.picture) {
+                            const pictureData = await fetchAttachment('user-pictures', user.picture);
+                            userData.picture = pictureData;
+                        }
+                        res.status(200).json(userData);
+                    }
+                } catch (error) {
+                    console.error('Error processing user data:', error);
+                    res.status(500).json({ error: LOCALE.internalServerError });
+                }
+            });
+
+            dataStream.on('error', function (err) {
+                console.error('Error fetching the user IBAN attachment:', err);
+                res.status(500).json({ error: LOCALE.internalServerError });
+            });
+        } else {
+            if (user.isGoogle) {
+                userData.picture = user.picture;
+                res.status(200).json(userData);
+            } else {
+                if (user.picture) {
+                    const pictureData = await fetchAttachment('user-pictures', user.picture);
+                    userData.picture = pictureData;
+                }
+                res.status(200).json(userData);
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching the user:', error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
+};
+
+/**
  * Handles the forgot password process by sending a verification code to the user's email
  * @param {Object} req The request object containing the user's email in req.body.email
  * @param {Object} res The response object to send a success message or an error response
@@ -760,4 +900,4 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updateCurrentUserPassword, logoutUser, deleteCurrentUser, getUserById, authenticateUserWithGoogle, forgotPassword, resetPassword };
+module.exports = { registerUser, authenticateUser, getUsersList, getCurrentUser, updateCurrentUser, updateCurrentUserPassword, logoutUser, deleteCurrentUser, getUserById, getUserDetailsByIdAndGroupId, authenticateUserWithGoogle, forgotPassword, resetPassword };
