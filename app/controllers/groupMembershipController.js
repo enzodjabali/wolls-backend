@@ -1,7 +1,7 @@
 const GroupMembership = require('../models/GroupMembership');
 const User = require('../models/User');
 const Group = require('../models/Group');
-const LOCALE = require('../locales/en-GB');
+const LOCALE = require('../locales/en-EN');
 
 const mongoose = require('mongoose');
 

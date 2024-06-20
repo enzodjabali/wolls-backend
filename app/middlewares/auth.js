@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const LOCALE = require('../locales/en-GB');
+const LOCALE = require('../locales/en-EN');
 
 /**
  * Middleware function to authenticate JSON Web Tokens (JWT) in request headers

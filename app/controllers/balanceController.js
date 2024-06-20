@@ -1,7 +1,7 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
 const User = require('../models/User'); // Make sure to require the User model
-const LOCALE = require('../locales/en-GB');
+const LOCALE = require('../locales/en-EN');
 const mongoose = require('mongoose');
 
 /**

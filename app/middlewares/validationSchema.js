@@ -1,5 +1,5 @@
 const Joi = require('@hapi/joi');
-const LOCALE = require('../locales/en-GB');
+const LOCALE = require('../locales/en-EN');
 
 //////////////////////////////////////////////////////////////////////
 //                             User                                 //
@@ -98,6 +98,7 @@ const createGroupSchema = Joi.object({
     }),
     theme: Joi.string().max(15).required().messages({
         'string.max': LOCALE.groupThemeTooLong,
+        'any.required': LOCALE.groupThemeRequired,
     }),
     invited_users: Joi.array().items(Joi.string()).optional()
 });

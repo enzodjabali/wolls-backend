@@ -1,6 +1,6 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
-const LOCALE = require('../locales/en-GB');
+const LOCALE = require('../locales/en-EN');
 const minioClient = require('../middlewares/minioClient');
 const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/validationSchema');
 
