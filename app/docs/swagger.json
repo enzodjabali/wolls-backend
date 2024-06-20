@@ -1290,6 +1290,10 @@
         "description": {
           "type": "string",
           "example": "A description of my group"
+        },
+        "theme": {
+          "type": "string",
+          "example": "madrid"
         }
       }
     },
@@ -1303,6 +1307,10 @@
         "description": {
           "type": "string",
           "example": "A description of my group"
+        },
+        "theme": {
+          "type": "string",
+          "example": "paris"
         },
         "invited_users": {
           "type": "array",

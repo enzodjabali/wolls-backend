@@ -18,20 +18,17 @@ const createGroup = async (req, res) => {
     try {
         await createGroupSchema.validateAsync(req.body);
 
-        const { name, description, invited_users = [] } = req.body;
+        const { name, description, theme, invited_users = [] } = req.body;
         const currentUser = await User.findOne({ _id: req.userId });
 
         if (!currentUser) {
             return res.status(404).json({ error: LOCALE.notConnected });
         }
 
-        const themes = ['city', 'desert', 'forest'];
-        const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-
         const newGroup = new Group({
             name,
             description,
-            theme: randomTheme,
+            theme,
         });
 
         const savedGroup = await newGroup.save();
@@ -204,7 +201,8 @@ const updateGroupById = async (req, res) => {
 
         const updatedGroup = await Group.findByIdAndUpdate(groupId, {
             name: req.body.name,
-            description: req.body.description
+            description: req.body.description,
+            theme: req.body.theme
         }, { new: true });
 
         if (!updatedGroup) {
