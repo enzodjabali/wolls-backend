@@ -59,7 +59,7 @@ module.exports = {
     groupNameTooShort: "The group name must have at least 2 characters",
     groupNameTooLong: "The group name can't be over 15 characters",
     groupDescriptionTooLong: "The group description can't be over 30 characters",
-    groupThemeTooLong: "The group theme can't be over 15 characters",
+    groupThemeTooLong: "The group theme can't be over 30 characters",
     groupThemeRequired: "A group theme is required",
     groupSuccessfullyDeleted: "The group has been successfully deleted",
     userDoesNotExist: "The user doesn't exist",

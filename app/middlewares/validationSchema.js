@@ -96,7 +96,7 @@ const createGroupSchema = Joi.object({
     description: Joi.string().max(30).allow('').messages({
         'string.max': LOCALE.groupDescriptionTooLong,
     }),
-    theme: Joi.string().max(15).required().messages({
+    theme: Joi.string().max(30).required().messages({
         'string.max': LOCALE.groupThemeTooLong,
         'any.required': LOCALE.groupThemeRequired,
     }),
@@ -112,7 +112,7 @@ const updateGroupSchema = Joi.object({
     description: Joi.string().max(30).allow('').messages({
         'string.max': LOCALE.groupDescriptionTooLong,
     }),
-    theme: Joi.string().max(15).messages({
+    theme: Joi.string().max(30).messages({
         'string.max': LOCALE.groupThemeTooLong,
     })
 });
