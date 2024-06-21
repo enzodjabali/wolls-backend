@@ -1,6 +1,6 @@
 const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
-const User = require('../models/User'); // Make sure to require the User model
+const User = require('../models/User');
 const LOCALE = require('../locales/en-EN');
 const mongoose = require('mongoose');
 
@@ -26,7 +26,14 @@ const getBalances = async (req, res) => {
         groupMemberships.forEach(membership => {
             const userId = membership.user_id._id.toString();
             const pseudonym = membership.user_id.pseudonym;
-            balances[userId] = { pseudonym, balance: 0 };
+            balances[userId] = {
+                _id: userId,
+                pseudonym,
+                balance: 0,
+                has_accepted_invitation: membership.has_accepted_invitation,
+                has_pending_invitation: !membership.has_accepted_invitation,
+                is_administrator: membership.is_administrator
+            };
         });
 
         for (const expense of expenses) {
@@ -36,27 +43,36 @@ const getBalances = async (req, res) => {
             const splitAmount = expense.amount / receivers.length;
 
             if (!balances[buyerId]) {
-                balances[buyerId] = { pseudonym: buyer.pseudonym, balance: 0 };
+                balances[buyerId] = {
+                    _id: buyerId,
+                    pseudonym: buyer.pseudonym,
+                    balance: 0,
+                    has_accepted_invitation: false,
+                    has_pending_invitation: false,
+                    is_administrator: false
+                };
             }
             balances[buyerId].balance += expense.amount;
 
             for (const receiverId of receivers) {
                 if (!balances[receiverId]) {
                     const recipient = await User.findById(receiverId, 'pseudonym');
-                    balances[receiverId] = { pseudonym: recipient.pseudonym, balance: 0 };
+                    balances[receiverId] = {
+                        _id: receiverId,
+                        pseudonym: recipient.pseudonym,
+                        balance: 0,
+                        has_accepted_invitation: false,
+                        has_pending_invitation: false,
+                        is_administrator: false
+                    };
                 }
                 balances[receiverId].balance -= splitAmount;
             }
         }
 
-        const filteredBalances = {};
-        for (const { pseudonym, balance } of Object.values(balances)) {
-            if (balance !== 0) {
-                filteredBalances[pseudonym] = balance;
-            }
-        }
+        const result = Object.values(balances).filter(user => user.balance !== 0);
 
-        res.status(200).json({ balances: filteredBalances });
+        res.status(200).json(result);
     } catch (error) {
         console.error('Error fetching the balances:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
