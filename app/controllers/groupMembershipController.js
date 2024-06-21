@@ -203,27 +203,28 @@ const deleteGroupMembership = async (req, res) => {
         const isRemovingSelf = userId === currentUserId;
         const targetIsAdmin = membership.is_administrator;
 
+        // Check if the current user is an administrator of the group
         if (isAdmin) {
+            // Count administrators in the group
             const adminCount = await GroupMembership.countDocuments({ group_id: groupId, is_administrator: true });
 
             if (isRemovingSelf && adminCount === 1) {
                 return res.status(403).json({ error: LOCALE.adminCannotRemoveOwnMembership });
             }
 
-            if (!isRemovingSelf && targetIsAdmin) {
-                return res.status(403).json({ error: LOCALE.cannotRemoveAnotherAdmin });
-            }
-
-            await GroupMembership.findByIdAndDelete(membership._id);
-
-            return res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
-        } else {
-            if (isRemovingSelf) {
+            // Allow removal of another administrator's membership
+            if (!isRemovingSelf || (isRemovingSelf && adminCount > 1)) {
                 await GroupMembership.findByIdAndDelete(membership._id);
                 return res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
-            } else {
-                return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroupMembers });
             }
+        }
+
+        // If the current user is not an administrator or removing themselves
+        if (isRemovingSelf) {
+            await GroupMembership.findByIdAndDelete(membership._id);
+            return res.status(200).json({ message: LOCALE.userSuccessfullyRemovedFromGroup });
+        } else {
+            return res.status(403).json({ error: LOCALE.notAllowedToRemoveGroupMembers });
         }
     } catch (error) {
         console.error('Error deleting a group membership:', error);
