@@ -31,7 +31,7 @@ const sendMessageToGroup = (groupId, senderId, content) => {
 
 const sendGroupMessage = async (req, res) => {
     try {
-        //await sendGroupMessageSchema.validateAsync(req.body, { abortEarly: false });
+        await sendGroupMessageSchema.validateAsync(req.body, { abortEarly: false });
 
         const { groupId, content } = req.body;
         console.log(groupId)
