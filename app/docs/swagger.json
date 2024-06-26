@@ -1117,40 +1117,6 @@
         }
       }
     },
-    "/v1/messages/private": {
-      "post": {
-        "tags": ["Messages"],
-        "description": "Send a private message",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/PrivateMessageRequestBody"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
     "/v1/messages/group": {
       "post": {
         "tags": ["Messages"],
@@ -1185,38 +1151,7 @@
         }
       }
     },
-    "/v1/messages/private/{userId}": {
-      "get": {
-        "tags": ["Messages"],
-        "description": "Get private messages with a user",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "description": "ID of the user"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/v1/messages/group/{groupId}": {
+    "/v1/messages/group/{groupId}?offset=0&limit=30": {
       "get": {
         "tags": ["Messages"],
         "description": "Get group messages",
@@ -1557,19 +1492,6 @@
         }
       }
     },
-    "PrivateMessageRequestBody": {
-      "type": "object",
-      "properties": {
-        "recipientId": {
-          "type": "string",
-          "example": "66389f405fa20246d95e8324"
-        },
-        "message": {
-          "type": "string",
-          "example": "Hello World Private!"
-        }
-      }
-    },
     "GroupMessageRequestBody": {
       "type": "object",
       "properties": {
@@ -1577,7 +1499,7 @@
           "type": "string",
           "example": "66389fdf5fa20246d95e832e"
         },
-        "message": {
+        "content": {
           "type": "string",
           "example": "Hello World Group!"
         }
