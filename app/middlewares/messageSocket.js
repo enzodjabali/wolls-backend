@@ -1,6 +1,8 @@
 const http = require('http');
 const socketIO = require('socket.io');
-const mongoose = require("mongoose");
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 // Create an HTTP server
 const server = http.createServer((req, res) => {
@@ -17,9 +19,8 @@ const io = socketIO(server, {
 });
 
 // Start the server on port 3002
-const PORT_SOCKET = 3002;
-server.listen(PORT_SOCKET, () => {
-    console.log(`Socket.io is running on port ${PORT_SOCKET}`);
+server.listen(process.env.APP_SOCKET_PORT, () => {
+    console.log(`Socket.io is running on port ${process.env.APP_SOCKET_PORT}`);
 });
 
 // Export the server and io instance

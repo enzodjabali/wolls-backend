@@ -6,7 +6,7 @@ const LOCALE = require('../locales/en-EN');
 const { sendGroupMessageSchema } = require('../middlewares/validationSchema');
 
 const mongoose = require('mongoose');
-const { io } = require('../socket'); // Import the Socket.IO instance
+const { io } = require('../middlewares/messageSocket'); // Import the Socket.IO instance
 
 const sendGroupMessage = async (req, res) => {
     try {

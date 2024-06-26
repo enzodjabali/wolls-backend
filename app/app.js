@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const { io } = require('./middlewares/messageSocket');
 const bodyParser = require('body-parser');
 
 dotenv.config();
@@ -48,15 +49,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./docs/swagger.json');
 APP.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-
-
-
-
-
-
-
-const { io } = require('./socket');
-
+// Socket.io for group messages
 io.on("connection", (socket) => {
     console.log(`User Connected: ${socket.id}`);
 
@@ -73,5 +66,3 @@ io.on("connection", (socket) => {
         console.log("User Disconnected", socket.id);
     });
 });
-
-
