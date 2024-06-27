@@ -47,10 +47,19 @@ const sendGroupMessage = async (req, res) => {
 
         await newMessage.save();
 
-        // Send the message to the group via Socket.IO
-        io.to(groupId).emit('group_message', newMessage);
+        // Fetch the sender's pseudonym
+        const sender = await User.findById(senderId, 'pseudonym');
 
-        res.status(201).json(newMessage);
+        // Add pseudonym to the message response
+        const responseMessage = {
+            ...newMessage._doc,
+            pseudonym: sender.pseudonym
+        };
+
+        // Send the message to the group via Socket.IO
+        io.to(groupId).emit('group_message', responseMessage);
+
+        res.status(201).json(responseMessage);
     } catch (error) {
         if (error.name === 'ValidationError') {
             const errorMessage = error.details.map(detail => detail.message).join(', ');
@@ -101,7 +110,21 @@ const getGroupMessages = async (req, res) => {
         // Reverse messages to maintain ascending order if necessary
         messages.reverse();
 
-        res.status(200).json(messages);
+        // Fetch the pseudonyms of the senders
+        const senderIds = messages.map(message => message.senderId);
+        const users = await User.find({ _id: { $in: senderIds } }, 'pseudonym');
+        const userMap = users.reduce((acc, user) => {
+            acc[user._id] = user.pseudonym;
+            return acc;
+        }, {});
+
+        // Add pseudonyms to the messages
+        const responseMessages = messages.map(message => ({
+            ...message._doc,
+            pseudonym: userMap[message.senderId]
+        }));
+
+        res.status(200).json(responseMessages);
     } catch (error) {
         console.error('Error fetching group messages:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
