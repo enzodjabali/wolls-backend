@@ -108,4 +108,42 @@ const getGroupMessages = async (req, res) => {
     }
 };
 
-module.exports = { sendGroupMessage, getGroupMessages };
+/**
+ * Retrieves the count of messages in a group if the user is a member of the group.
+ * @param {Object} req The request object containing groupId in req.params and userId in req.userId
+ * @param {Object} res The response object to send the count of messages or an error response
+ * @returns {Object} Returns the count of messages if successful, otherwise returns an error response
+ */
+const getGroupMessageCount = async (req, res) => {
+    try {
+        const groupId = req.params.groupId;
+        const userId = req.userId;
+
+        // Validate groupId
+        if (!mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ error: LOCALE.groupNotFound });
+        }
+
+        // Check if the group exists
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ error: LOCALE.groupNotFound });
+        }
+
+        // Check if the user is a member of the group
+        const isMember = await GroupMembership.exists({ user_id: userId, group_id: groupId });
+        if (!isMember) {
+            return res.status(403).json({ error: LOCALE.notGroupMember });
+        }
+
+        // Count messages in the group
+        const messageCount = await Message.countDocuments({ groupId });
+
+        res.status(200).json({ count: messageCount });
+    } catch (error) {
+        console.error('Error fetching group message count:', error);
+        res.status(500).json({ error: LOCALE.internalServerError });
+    }
+};
+
+module.exports = { sendGroupMessage, getGroupMessages, getGroupMessageCount };
