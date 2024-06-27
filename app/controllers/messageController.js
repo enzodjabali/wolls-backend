@@ -94,9 +94,12 @@ const getGroupMessages = async (req, res) => {
 
         // Fetch messages with pagination
         const messages = await Message.find({ groupId })
+            .sort({ timestamp: -1 }) // Sort messages by timestamp in descending order
             .skip(parseInt(offset))
-            .limit(parseInt(limit))
-            .sort({ timestamp: 1 }); // Sort messages by timestamp in ascending order
+            .limit(parseInt(limit));
+
+        // Reverse messages to maintain ascending order if necessary
+        messages.reverse();
 
         res.status(200).json(messages);
     } catch (error) {
