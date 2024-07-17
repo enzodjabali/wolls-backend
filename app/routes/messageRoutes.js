@@ -1,12 +1,10 @@
 const express = require('express');
-const { sendPrivateMessage, sendGroupMessage, getPrivateMessages, getGroupMessages } = require ('../controllers/messageController');
+const { sendGroupMessage, getGroupMessages, getGroupMessageCount } = require('../controllers/messageController');
 const router = express.Router();
-
 const authenticateJWT = require('../middlewares/auth');
 
-router.post('/private', authenticateJWT, sendPrivateMessage);
 router.post('/group', authenticateJWT, sendGroupMessage);
-router.get('/private/:recipientId', authenticateJWT, getPrivateMessages);
 router.get('/group/:groupId', authenticateJWT, getGroupMessages);
+router.get('/group/:groupId/count', authenticateJWT, getGroupMessageCount);
 
 module.exports = router;

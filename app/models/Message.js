@@ -6,15 +6,11 @@ const messageSchema = new mongoose.Schema({
         required: true,
         ref: 'User'
     },
-    recipientId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    },
     groupId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Group'
     },
-    message: {
+    content: {
         type: String,
         required: true
     },
@@ -24,6 +20,6 @@ const messageSchema = new mongoose.Schema({
     }
 });
 
-const Message = mongoose.model('Message', messageSchema);
+const Message = mongoose.models.Message || mongoose.model('Message', messageSchema);
 
 module.exports = Message;
