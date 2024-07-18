@@ -50,19 +50,19 @@ const swaggerDocument = require('./docs/swagger.json');
 APP.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Socket.io for group messages
-io.on("connection", (socket) => {
-    console.log(`User Connected: ${socket.id}`);
+//io.on("connection", (socket) => {
+//    console.log(`User Connected: ${socket.id}`);
+//
+//    socket.on("join_room", async (data) => {
+//        try {
+//            socket.join(data);
+//            console.log(`User with ID: ${socket.id} joined room: ${data}`);
+//        } catch (err) {
+//            console.error(err);
+//        }
+//    });
 
-    socket.on("join_room", async (data) => {
-        try {
-            socket.join(data);
-            console.log(`User with ID: ${socket.id} joined room: ${data}`);
-        } catch (err) {
-            console.error(err);
-        }
-    });
-
-    socket.on("disconnect", () => {
-        console.log("User Disconnected", socket.id);
-    });
-});
+//    socket.on("disconnect", () => {
+//        console.log("User Disconnected", socket.id);
+//    });
+//});
