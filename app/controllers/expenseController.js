@@ -2,6 +2,7 @@ const Expense = require('../models/Expense');
 const GroupMembership = require('../models/GroupMembership');
 const LOCALE = require('../locales/en-EN');
 const minioClient = require('../middlewares/minioClient');
+const upload = require('../middlewares/objectStorage')
 const { createExpenseSchema, updateExpenseSchema } = require('../middlewares/validationSchema');
 
 const path = require('path');
@@ -145,16 +146,8 @@ const createExpense = async (req, res) => {
         let fileName = null;
 
         if (attachment && attachment.content) {
-            const base64Data = attachment.content;
-            const decodedFileContent = Buffer.from(base64Data, 'base64');
 
-            const bucketName = 'expense-attachments';
-            fileName = `${uuidv4()}${path.extname(attachment.filename)}`;
-            const metaData = {
-                'Content-Type': 'application/octet-stream'
-            };
-
-            await minioClient.putObject(bucketName, fileName, decodedFileContent, decodedFileContent.length, metaData);
+            await upload(attachment.content, attachment.filename);
         }
 
         const newExpense = new Expense({
