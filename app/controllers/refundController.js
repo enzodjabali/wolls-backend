@@ -67,8 +67,17 @@ const calculateRefundsSimplified = async (expenses) => {
             const refundAmountPerRecipient = amount / numRecipients;
             const creator = await User.findById(creator_id).select('pseudonym');
 
+            if (!creator) {
+                continue; // Skip this expense if the creator is not found
+            }
+
             for (const recipient of refund_recipients) {
                 const recipientUser = await User.findById(recipient).select('pseudonym');
+
+                if (!recipientUser) {
+                    continue; // Skip this recipient if not found
+                }
+
                 if (creator.pseudonym === recipientUser.pseudonym) {
                     continue; // Skip if the creator is the recipient
                 }
