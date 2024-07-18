@@ -69,7 +69,7 @@ const updateUserSchema = Joi.object({
         'string.min': LOCALE.ibanTooShort,
         'string.max': LOCALE.ibanTooLong,
     }),
-    ibanAttachment: Joi.any(),
+    //ibanAttachment: Joi.any(),
     password: Joi.string().min(8).messages({
         'string.empty': LOCALE.passwordRequired,
         'string.min': LOCALE.passwordTooShort,
@@ -79,7 +79,7 @@ const updateUserSchema = Joi.object({
         'string.min': LOCALE.passwordTooShort,
         'any.only': LOCALE.passwordsNotMatching,
     }),
-    picture: Joi.any(),
+    //picture: Joi.any(),
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -143,7 +143,7 @@ const createExpenseSchema = Joi.object({
     refund_recipients: Joi.array().items(Joi.string()).required().messages({
         'any.required': LOCALE.expenseRefundRecipientsRequired,
     }),
-    attachment: Joi.any(),
+    //attachment: Joi.any(),
     isRefunded: Joi.boolean()
 });
 
@@ -163,7 +163,7 @@ const updateExpenseSchema = Joi.object({
         'string.max': LOCALE.expenseCategoryTooLong,
     }),
     refund_recipients: Joi.array().items(Joi.string()),
-    attachment: Joi.any(),
+    //attachment: Joi.any(),
     isRefunded: Joi.boolean()
 });
 
