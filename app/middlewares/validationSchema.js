@@ -6,23 +6,26 @@ const LOCALE = require('../locales/en-EN');
 //////////////////////////////////////////////////////////////////////
 
 const createUserSchema = Joi.object({
-    firstname: Joi.string().min(2).max(15).required().messages({
+    firstname: Joi.string().min(2).max(15).regex(/^[a-zA-Z]+$/).required().messages({
         'string.empty': LOCALE.firstNameRequired,
         'string.min': LOCALE.firstNameTooShort,
         'string.max': LOCALE.firstNameTooLong,
         'any.required': LOCALE.firstNameRequired,
+        'string.pattern.base': LOCALE.invalidRegexFirstname
     }),
-    lastname: Joi.string().min(2).max(15).required().messages({
+    lastname: Joi.string().min(2).max(15).regex(/^[a-zA-Z]+$/).required().messages({
         'string.empty': LOCALE.lastNameRequired,
         'string.min': LOCALE.lastNameTooShort,
         'string.max': LOCALE.lastNameTooLong,
         'any.required': LOCALE.lastNameRequired,
+        'string.pattern.base': LOCALE.invalidRegexLastname
     }),
-    pseudonym: Joi.string().min(2).max(15).required().messages({
+    pseudonym: Joi.string().min(2).max(15).regex(/^[a-zA-Z0-9-_]+$/).required().messages({
         'string.empty': LOCALE.pseudonymRequired,
         'string.min': LOCALE.pseudonymTooShort,
         'string.max': LOCALE.pseudonymTooLong,
         'any.required': LOCALE.pseudonymRequired,
+        'string.pattern.base': LOCALE.invalidRegexPseudonym
     }),
     email: Joi.string().email().lowercase().required().messages({
         'string.empty': LOCALE.emailRequired,
@@ -42,20 +45,23 @@ const createUserSchema = Joi.object({
 });
 
 const updateUserSchema = Joi.object({
-    firstname: Joi.string().min(2).max(15).messages({
+    firstname: Joi.string().min(2).max(15).regex(/^[a-zA-Z]+$/).messages({
         'string.empty': LOCALE.firstNameRequired,
         'string.min': LOCALE.firstNameTooShort,
         'string.max': LOCALE.firstNameTooLong,
+        'string.pattern.base': LOCALE.invalidRegexFirstname
     }),
-    lastname: Joi.string().min(2).max(15).messages({
+    lastname: Joi.string().min(2).max(15).regex(/^[a-zA-Z]+$/).messages({
         'string.empty': LOCALE.lastNameRequired,
         'string.min': LOCALE.lastNameTooShort,
         'string.max': LOCALE.lastNameTooLong,
+        'string.pattern.base': LOCALE.invalidRegexLastname
     }),
-    pseudonym: Joi.string().min(2).max(15).messages({
+    pseudonym: Joi.string().min(2).max(15).regex(/^[a-zA-Z0-9-_]+$/).messages({
         'string.empty': LOCALE.pseudonymRequired,
         'string.min': LOCALE.pseudonymTooShort,
         'string.max': LOCALE.pseudonymTooLong,
+        'string.pattern.base': LOCALE.invalidRegexPseudonym
     }),
     email: Joi.string().email().lowercase().messages({
         'string.empty': LOCALE.emailRequired,
@@ -65,11 +71,12 @@ const updateUserSchema = Joi.object({
         'string.empty': LOCALE.emailPaypalNotEmpty,
         'string.email': LOCALE.invalidEmailPaypal,
     }),
-    iban: Joi.string().min(25).max(35).allow('').messages({
+    iban: Joi.string().min(25).max(35).allow('').regex(/^[a-zA-Z0-9 ]+$/).messages({
         'string.min': LOCALE.ibanTooShort,
         'string.max': LOCALE.ibanTooLong,
+        'string.pattern.base': LOCALE.invalidRegexIban
     }),
-    ibanAttachment: Joi.any(),
+    //ibanAttachment: Joi.any(),
     password: Joi.string().min(8).messages({
         'string.empty': LOCALE.passwordRequired,
         'string.min': LOCALE.passwordTooShort,
@@ -79,7 +86,7 @@ const updateUserSchema = Joi.object({
         'string.min': LOCALE.passwordTooShort,
         'any.only': LOCALE.passwordsNotMatching,
     }),
-    picture: Joi.any(),
+    //picture: Joi.any(),
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -131,6 +138,7 @@ const createExpenseSchema = Joi.object({
     amount: Joi.number().min(0).required().messages({
         'number.min': LOCALE.expenseAmountTooLow,
         'any.required': LOCALE.expenseAmountRequired,
+        'number.base': LOCALE.expenseAmountRequired,
     }),
     group_id: Joi.string().required().messages({
         'any.required': LOCALE.expenseGroupIdRequired,
@@ -143,7 +151,7 @@ const createExpenseSchema = Joi.object({
     refund_recipients: Joi.array().items(Joi.string()).required().messages({
         'any.required': LOCALE.expenseRefundRecipientsRequired,
     }),
-    attachment: Joi.any(),
+    //attachment: Joi.any(),
     isRefunded: Joi.boolean()
 });
 
@@ -155,6 +163,7 @@ const updateExpenseSchema = Joi.object({
     }),
     amount: Joi.number().min(0).messages({
         'number.min': LOCALE.expenseAmountTooLow,
+        'number.base': LOCALE.expenseAmountRequired,
     }),
     group_id: Joi.string(),
     category: Joi.string().min(2).max(30).messages({
@@ -163,7 +172,7 @@ const updateExpenseSchema = Joi.object({
         'string.max': LOCALE.expenseCategoryTooLong,
     }),
     refund_recipients: Joi.array().items(Joi.string()),
-    attachment: Joi.any(),
+    //attachment: Joi.any(),
     isRefunded: Joi.boolean()
 });
 

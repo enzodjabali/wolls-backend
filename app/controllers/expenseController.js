@@ -130,6 +130,11 @@ const getExpense = async (req, res) => {
  */
 const createExpense = async (req, res) => {
     try {
+        // Preprocess the amount to handle comma as decimal separator
+        if (req.body.amount) {
+            req.body.amount = String(req.body.amount).replace(',', '.');
+        }
+
         await createExpenseSchema.validateAsync(req.body);
 
         const { title, amount, category, group_id, refund_recipients, attachment } = req.body;
@@ -159,7 +164,7 @@ const createExpense = async (req, res) => {
 
         const newExpense = new Expense({
             title,
-            amount,
+            amount: amount,
             date,
             creator_id,
             group_id,
@@ -193,6 +198,11 @@ const updateExpense = async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(expenseId)) {
             return res.status(400).json({ error: LOCALE.expenseNotFound });
+        }
+
+        // Preprocess the amount to handle comma as decimal separator
+        if (req.body.amount) {
+            req.body.amount = String(req.body.amount).replace(',', '.');
         }
 
         await updateExpenseSchema.validateAsync(req.body);

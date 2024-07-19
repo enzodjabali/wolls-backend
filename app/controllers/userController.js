@@ -21,17 +21,22 @@ const crypto = require('crypto');
  */
 const registerUser = async (req, res) => {
     try {
+        // Validate the request body against the schema
         await createUserSchema.validateAsync(req.body);
 
         let { firstname, lastname, pseudonym, email, password, confirmPassword } = req.body;
 
+        // Check if email already exists
         const emailExists = await User.findOne({ email });
-        const pseudonymExists = await User.findOne({ pseudonym });
+
+        // Check if pseudonym already exists (case insensitive)
+        const pseudonymExists = await User.findOne({ pseudonym: { $regex: new RegExp(`^${pseudonym}$`, 'i') } });
 
         if (password !== confirmPassword) {
             return res.status(400).json({ error: LOCALE.passwordsNotMatching });
         }
 
+        // Hash the password
         password = await bcrypt.hash(password, 10);
 
         if (emailExists) {
@@ -42,6 +47,7 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: LOCALE.pseudonymAlreadyExists });
         }
 
+        // Create a new user
         const user = new User({
             firstname,
             lastname,
@@ -50,15 +56,17 @@ const registerUser = async (req, res) => {
             password
         });
 
+        // Save the user to the database
         const savedUser = await user.save();
 
+        // Respond with the saved user data
         res.status(201).json(savedUser);
     } catch (error) {
         if (error.name === 'ValidationError' && error.isJoi) {
             const errorMessage = error.details.map(detail => detail.message).join(', ');
             return res.status(400).json({ error: errorMessage });
         }
-        console.error('Error logging in the user:', error);
+        console.error('Error registering the user:', error);
         res.status(500).json({ error: LOCALE.internalServerError });
     }
 };
@@ -266,7 +274,7 @@ const updateCurrentUser = async (req, res) => {
         }
 
         if (req.body.pseudonym && req.body.pseudonym !== currentUser.pseudonym) {
-            const pseudonymExists = await User.exists({ pseudonym: req.body.pseudonym });
+            const pseudonymExists = await User.exists({ pseudonym: { $regex: new RegExp(`^${req.body.pseudonym}$`, 'i') } });
             if (pseudonymExists) {
                 return res.status(400).json({ error: LOCALE.pseudonymAlreadyExists });
             }
@@ -316,7 +324,7 @@ const updateCurrentUser = async (req, res) => {
                     await minioClient.removeObject(bucketName, existingFileName);
                 } catch (deleteError) {
                     console.error('Error deleting existing IBAN attachment from S3:', deleteError);
-                    res.status(500).json({ error: LOCALE.internalServerError });
+                    return res.status(500).json({ error: LOCALE.internalServerError });
                 }
             }
 
@@ -382,7 +390,7 @@ const updateCurrentUser = async (req, res) => {
         const updatedUser = await User.findByIdAndUpdate(req.userId, req.body);
 
         if (updatedUser) {
-            res.status(200).send(await User.findById(req.userId));
+            res.status(200).json(updatedUser);
         } else {
             res.status(404).json({ error: LOCALE.userNotFound });
         }
