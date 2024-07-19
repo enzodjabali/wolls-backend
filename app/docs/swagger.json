@@ -1,12 +1,12 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "1.0.0",
-    "title": "Goodfriends API",
-    "description": "REST API for Goodfriends",
+    "version": "1.0.1",
+    "title": "Wolls API",
+    "description": "REST API for Wolls",
     "contact": {
       "name": "API Support",
-      "email": "support@goodfriends.tech"
+      "email": "support@wolls.app"
     }
   },
   "host": "127.0.0.1:3000",
